@@ -31,10 +31,8 @@ Options
 
 Example:
 --------
-A JSON file:
+A JSON file 'test.json'
 ```json
-$ cat src/test/resources/json/test.json 
-
 {
 individuals:[
 	{
@@ -74,6 +72,7 @@ apply the template:
 ```bash
 $ java -jar dist/jsvelocity.jar \
 	-f all test.json test.vm
+
 <html>
 <body>
 <h1>Riri</h1>
