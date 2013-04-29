@@ -16,8 +16,8 @@ ant
 ```
 
 Usage
-
 -----
+
 ```bash
 java -jar jsvelocity.jar (options) template.vm
 ```
