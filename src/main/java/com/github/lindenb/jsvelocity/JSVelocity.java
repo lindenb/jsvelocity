@@ -103,7 +103,7 @@ private void run(String args[]) throws Exception
 	VelocityEngine ve = new VelocityEngine();
 	ve.setProperty("resource.loader", "file");
 	ve.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-	ve.setProperty("file.resource.loader.path",file.getParent());
+	if(file.getParent()!=null) ve.setProperty("file.resource.loader.path",file.getParent());
 	ve.init();
 	Template template = ve.getTemplate(file.getName());
 	PrintWriter w=new PrintWriter( System.out);
