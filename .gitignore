@@ -1,0 +1,5 @@
+*~
+src/main/generated-sources
+build.properties
+*.class
+dist

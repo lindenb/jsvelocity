@@ -1,0 +1,21 @@
+{
+individuals:[
+	{
+	name: "Riri",
+	age: 8,
+	duck: true
+	},
+	{
+	name: "Fifi",
+	age: 9,
+	duck: true
+	},
+	{
+	name: "Loulou",
+	age: 10,
+	duck: true
+	}
+
+	]
+
+}

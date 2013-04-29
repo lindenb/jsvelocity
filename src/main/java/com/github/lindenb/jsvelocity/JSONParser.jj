@@ -1,0 +1,287 @@
+/**
+ * Author:
+ * 	Pierre Lindenbaum PhD
+ * Date:
+ * 	March-2011
+ * Contact:
+ * 	plindenbaum@yahoo.fr
+ * Reference:
+ *   
+ * WWW:
+ * 	http://plindenbaum.blogspot.com
+ * Wiki
+ *  
+ * Motivation:
+ * 	process JSON structure with apache velocity
+ */
+options {
+STATIC=false;
+}
+
+
+PARSER_BEGIN(JSONParser)
+
+package com.github.lindenb.jsvelocity;
+import java.util.*;
+import java.io.*;
+import java.math.*;
+
+@SuppressWarnings("unchecked")
+public class JSONParser
+{
+private String unescape(String s) throws ParseException
+	{
+	 StringBuilder b=new StringBuilder(s.length());
+        int i=0;
+        while(i<s.length())
+        	{
+        	if(s.charAt(i)=='\\')
+        		{
+        		if( i+1== s.length())  throw new ParseException("Badly escaped string "+s);
+        		++i;
+        		switch(s.charAt(i))
+        			{
+        			case 'n': b.append("\n");break;
+        			case 'r': b.append("\r");break;
+        			case 't': b.append("\t");break;
+        			case '\\': b.append("\\");break;
+        			case '\'': b.append("\'");break;
+        			case '\"': b.append("\"");break;
+        			default: throw new ParseException("Badly escaped string "+s);
+        			}
+        		}
+        	else
+        		{
+        		b.append(s.charAt(i));
+        		}
+        	++i;
+        	}
+        return b.toString();
+	}
+}
+
+
+PARSER_END(JSONParser)
+
+SKIP :
+{
+" "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n"])* "\n">
+| <"/*">: INSIDE_COMMENT
+}
+
+<INSIDE_COMMENT>
+SKIP:
+{
+        <"*/">: DEFAULT
+|       <~[]>
+}
+
+
+
+TOKEN : /* LITERALS */
+{
+  <TRUE: "true">
+| <FALSE: "false">
+| <NULL: "null">
+| <#LETTER: ["_","a"-"z","A"-"Z"] >
+| <#DIGIT: ["0"-"9"] >
+| <#SIGN: ["-","+"]>
+| <#EXPONENT: ("E"|"e") (<SIGN>)? (<DIGIT>)+ >
+| <FLOATING_NUMBER: (<DIGIT>)* "." (<DIGIT>)* (<EXPONENT>)?
+| (<DIGIT>)+ (<EXPONENT>) >
+| <INT_NUMBER: (<DIGIT>)+ >
+| <IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>|"-")* >
+| <#ESCAPE_CHAR: "\\" ["n","t","b","r","f","\\","'","\""] >
+| <SIMPLE_QUOTE_LITERAL:
+"\'"
+( (~["\'","\\","\n","\r"])
+| <ESCAPE_CHAR>
+)*
+"\'"
+>
+|
+<DOUBLE_QUOTE_LITERAL:
+"\""
+( (~["\"","\\","\n","\r"])
+| <ESCAPE_CHAR>
+)*
+"\""
+>
+| <ARRAY_OPEN: "[">
+| <ARRAY_CLOSE: "]">
+| <COMMA: ",">
+| <OBJECT_OPEN: "{">
+| <OBJECT_CLOSE: "}">
+| <PAR_OPEN: "(">
+| <PAR_CLOSE: ")">
+| <COLON: ":">
+}
+
+public Object parse():{Object o;}
+	{
+	o=any() eof()
+		{
+		return o;
+		}
+	}
+
+private Object any():
+	{Object o;}
+	{
+	(
+	o= complexNode()
+	| o= terminalNode()
+	)
+	{return o;}
+	}
+
+public Object complexNode():
+	{Object o;}
+	{
+	(
+	o= objectNode()
+	| o= arrayNode()
+	)
+	{return o;}
+	}
+
+public Object terminalNode():
+	{
+	Object n;
+	}
+	{
+	(
+	  n=decimalNode() { return n;}
+	| n=intNode() { return n;}
+	| n=boolNode() { return n;}
+	| n=nilNode() { return n;}
+	| n=stringNode() { return n;}
+	)
+	}
+
+public Object nilNode():{}
+	{
+	<NULL> { return null; }
+	}
+
+public Boolean boolNode():{}
+	{
+	(
+	  <TRUE>  { return Boolean.TRUE; }
+	| <FALSE> { return Boolean.FALSE;}
+	)
+	}
+
+public Number intNode():{	Token t;}
+	{
+	t=<INT_NUMBER> { return new Integer(t.image); }
+	}
+
+public Number decimalNode():{	Token t;}
+	{
+	t=<FLOATING_NUMBER> {return new Double(t.image); }
+	}
+
+public String stringNode():{	String s;}
+	{
+	s=characters() { return s; }
+	}
+
+
+private String characters():
+	{
+	Token t;
+	}
+	{
+	(
+	t=<SIMPLE_QUOTE_LITERAL>
+		{
+		return  unescape(t.image.substring(1,t.image.length()-1));
+		}
+	| t=<DOUBLE_QUOTE_LITERAL>
+		{
+		return unescape(t.image.substring(1,t.image.length()-1));
+		}
+	| t=<IDENTIFIER>
+	     {
+	     return t.image;
+	     }
+	)
+	}
+
+public List<Object> arrayNode():
+	{ List<Object> vector= new ArrayList<Object>(); Object o;}
+	{
+	openArray() ( o=any() {vector.add(o);} (comma() o=any() {vector.add(o);} ) * )? closeArray()
+		{
+		return vector;
+		}
+	}
+
+public Map<String,Object> objectNode():
+	{Map<String,Object> map= new LinkedHashMap<String,Object>(); }
+	{
+	openObject() ( keyValue(map) (comma() keyValue(map))*)? closeObject()
+		{
+		return map;
+		}
+	}
+
+public void colon():
+   {
+   }
+   {
+   <COLON>
+   }
+
+private void keyValue( Map<String,Object> map):
+	{String k; Object v;}
+	{
+	(k=characters() colon() v=any())
+		{
+		if(map.containsKey(k)) throw new ParseException(k+" defined twice in object");
+		map.put(k,v);
+		}
+	}
+	
+/** function for streaming big object/array */
+public void openObject():{}
+	{
+	<OBJECT_OPEN>
+	}
+
+/** function for streaming big object/array */
+public void closeObject():{}
+	{
+	<OBJECT_CLOSE>
+	}
+
+/** function for streaming big object/array */
+public void openArray():{}
+	{
+	<ARRAY_OPEN>
+	}
+
+/** function for streaming big object/array */
+public void closeArray():{}
+	{
+	<ARRAY_CLOSE>
+	}
+
+/** function for streaming big object/array */
+public void comma():{}
+	{
+	<COMMA>
+	}
+
+/** go to EOF, check that there are only some blanks chars */
+public void eof():{}
+	{
+	<EOF>
+	}	
+	
+

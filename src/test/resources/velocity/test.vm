@@ -1,0 +1,9 @@
+<html>
+<body>
+#foreach($indi in ${all.individuals})
+<h1>${indi['name']}</h1>
+Age:${indi.age}<br/>${indi.duck}
+#end
+</body>
+</html>
+
