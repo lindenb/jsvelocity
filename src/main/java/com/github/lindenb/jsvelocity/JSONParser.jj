@@ -29,6 +29,121 @@ import java.math.*;
 @SuppressWarnings("unchecked")
 public class JSONParser
 {
+public static interface JSNode
+	{
+	public boolean isArray();
+	public boolean isObject();
+	public boolean isNumber();
+	public boolean isString();
+	public boolean isBoolean();
+	public boolean isNull();
+	public JSNode getParentNode();
+	public void setParentNode(JSNode p);
+	}
+
+public static class JSArray
+	extends java.util.ArrayList<JSNode>
+	implements JSNode
+	{
+	JSNode parent=null;
+	public boolean isArray() { return true;}
+	public boolean isObject() { return false;}
+	public boolean isNumber() { return false;}
+	public boolean isString() { return false;}
+	public boolean isBoolean() { return false;}
+	public boolean isNull() { return false;}
+	public JSNode getParentNode()
+		{
+		return parent;
+		}
+	public void setParentNode(JSNode parent)
+		{
+		this.parent=parent;
+		}
+	}
+
+public static class JSObject
+	extends java.util.LinkedHashMap<String,JSNode>
+	implements JSNode
+	{
+	JSNode parent=null;
+	public boolean isArray() { return false;}
+	public boolean isObject() { return true;}
+	public boolean isNumber() { return false;}
+	public boolean isString() { return false;}
+	public boolean isBoolean() { return false;}
+	public boolean isNull() { return false;}
+	public JSNode getParentNode()
+		{
+		return parent;
+		}
+	public void setParentNode(JSNode parent)
+		{
+		this.parent=parent;
+		}
+	}
+	
+public static class JSNull
+	implements JSNode
+	{
+	JSNode parent;
+	public boolean isArray() { return false;}
+	public boolean isObject() { return true;}
+	public boolean isNumber() { return false;}
+	public boolean isString() { return false;}
+	public boolean isBoolean() { return false;}
+	public boolean isNull() { return true;}
+	public JSNode getParentNode()
+		{
+		return parent;
+		}
+	public String toString()
+		{
+		return null;
+		}
+	public void setParentNode(JSNode parent)
+		{
+		this.parent=parent;
+		}
+	}	
+
+public static class JSGenericNode<T>
+	implements JSNode
+	{
+	JSNode parent=null;
+	T value;
+	
+	JSGenericNode(T value)
+		{
+		this.value=value;
+		}
+	public boolean isArray() { return false;}
+	public boolean isObject() { return false;}
+	public boolean isNumber() { return value instanceof Number;}
+	public boolean isString() { return value instanceof String;}
+	public boolean isBoolean() {  return value instanceof Boolean;}
+	public boolean isNull() { return false;}
+	public JSNode getParentNode()
+		{
+		return parent;
+		}
+	
+	public T getValue()
+		{
+		return value;
+		}
+	
+	public String toString()
+		{
+		return value.toString();
+		}
+		
+	public void setParentNode(JSNode parent)
+		{
+		this.parent=parent;
+		}
+	}
+
 private String unescape(String s) throws ParseException
 	{
 	 StringBuilder b=new StringBuilder(s.length());
@@ -121,7 +236,7 @@ TOKEN : /* LITERALS */
 | <COLON: ":">
 }
 
-public Object parse():{Object o;}
+public JSNode parse():{JSNode o;}
 	{
 	o=any() eof()
 		{
@@ -129,8 +244,8 @@ public Object parse():{Object o;}
 		}
 	}
 
-private Object any():
-	{Object o;}
+private JSNode any():
+	{JSNode o;}
 	{
 	(
 	o= complexNode()
@@ -139,8 +254,8 @@ private Object any():
 	{return o;}
 	}
 
-public Object complexNode():
-	{Object o;}
+public JSNode complexNode():
+	{JSNode o;}
 	{
 	(
 	o= objectNode()
@@ -149,9 +264,9 @@ public Object complexNode():
 	{return o;}
 	}
 
-public Object terminalNode():
+public JSNode terminalNode():
 	{
-	Object n;
+	JSNode n;
 	}
 	{
 	(
@@ -163,32 +278,32 @@ public Object terminalNode():
 	)
 	}
 
-public Object nilNode():{}
+public JSNull nilNode():{}
 	{
-	<NULL> { return null; }
+	<NULL> { return new JSNull(); }
 	}
 
-public Boolean boolNode():{}
+public JSGenericNode<Boolean> boolNode():{}
 	{
 	(
-	  <TRUE>  { return Boolean.TRUE; }
-	| <FALSE> { return Boolean.FALSE;}
+	  <TRUE>  { return new JSGenericNode<Boolean>(Boolean.TRUE); }
+	| <FALSE> { return new JSGenericNode<Boolean>(Boolean.FALSE);}
 	)
 	}
 
-public Number intNode():{	Token t;}
+public JSGenericNode<Number> intNode():{	Token t;}
 	{
-	t=<INT_NUMBER> { return new Integer(t.image); }
+	t=<INT_NUMBER> { return new JSGenericNode<Number>(new Integer(t.image)); }
 	}
 
-public Number decimalNode():{	Token t;}
+public JSGenericNode<Number> decimalNode():{	Token t;}
 	{
-	t=<FLOATING_NUMBER> {return new Double(t.image); }
+	t=<FLOATING_NUMBER> {return new JSGenericNode<Number>(new Double(t.image)); }
 	}
 
-public String stringNode():{	String s;}
+public JSGenericNode<String> stringNode():{	String s;}
 	{
-	s=characters() { return s; }
+	s=characters() { return new JSGenericNode<String>(s); }
 	}
 
 
@@ -213,17 +328,17 @@ private String characters():
 	)
 	}
 
-public List<Object> arrayNode():
-	{ List<Object> vector= new ArrayList<Object>(); Object o;}
+public JSArray arrayNode():
+	{ JSArray vector= new JSArray(); JSNode o;}
 	{
-	openArray() ( o=any() {vector.add(o);} (comma() o=any() {vector.add(o);} ) * )? closeArray()
+	openArray() ( o=any() {o.setParentNode(vector);vector.add(o);} (comma() o=any() {o.setParentNode(vector);vector.add(o);} ) * )? closeArray()
 		{
 		return vector;
 		}
 	}
 
-public Map<String,Object> objectNode():
-	{Map<String,Object> map= new LinkedHashMap<String,Object>(); }
+public JSObject objectNode():
+	{JSObject map= new JSObject(); }
 	{
 	openObject() ( keyValue(map) (comma() keyValue(map))*)? closeObject()
 		{
@@ -238,12 +353,13 @@ public void colon():
    <COLON>
    }
 
-private void keyValue( Map<String,Object> map):
-	{String k; Object v;}
+private void keyValue( JSObject map):
+	{String k; JSNode v;}
 	{
 	(k=characters() colon() v=any())
 		{
 		if(map.containsKey(k)) throw new ParseException(k+" defined twice in object");
+		v.setParentNode(map);
 		map.put(k,v);
 		}
 	}
