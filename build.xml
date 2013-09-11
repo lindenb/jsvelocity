@@ -16,8 +16,10 @@
            failonerror="true"
            >
            	<arg value="-f"/> <arg value="all"/> <arg value="./src/test/resources/json/test.json"/>
+           	<arg value="-C"/> <arg value="STRING"/> <arg value="java.lang.String"/>
            	 <arg value="./src/test/resources/velocity/test.vm"/>
          </java>
+         
 </target>
 
 

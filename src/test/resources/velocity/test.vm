@@ -4,6 +4,14 @@
 <h1>${indi['name']}</h1>
 Age:${indi.age}<br/>${indi.duck}
 #end
+<h3>String Constructors</h3>
+<ul>
+#foreach($S in ${STRING.constructors})
+<li>${tool.escapeXml(${S})}</li>
+#end
+</ul>
+<p>${tool.escapeXml("<>&")}</p>
+${out.open("/tmp/file.txt")}Hello${out.close()}
 </body>
 </html>
 
