@@ -1,0 +1,27 @@
+{
+"name":"X",
+"spreadsheets":[
+	{
+	"name":"individual",
+	"columns":[
+		{
+		"name":"name",
+		"label":"name",
+		"type":"string"
+		},
+		{
+		"name":"age",
+		"label":"age",
+		"type":"int"
+		}
+		],
+	"references":[
+		{
+		"name":"father",
+		"label":"father",
+		"table":"individual"
+		}
+		]
+	}
+]
+}

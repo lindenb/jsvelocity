@@ -1,0 +1,527 @@
+#macro(javaName $s)${s.substring(0,1).toUpperCase()}${s.substring(1)}#end
+#macro(javaType1 $t)#if($t=="int" || $t=="integer"  || $t=="Integer")java.lang.Integer#elseif($t=="long" || $t=="Long")java.lang.Long#{else}java.lang.String#end#end
+
+class #javaName("${config.name}")Model
+	{
+	interface Column
+		{
+		public String getColumnName();
+		public Class<?> getColumnClass();
+		}
+	
+	
+	 abstract interface Row
+		{
+		public java.math.BigInteger getId();
+		public Object getValueAt(int column);
+		public void read( javax.xml.stream.XMLEventReader reader) throws javax.xml.stream.XMLStreamException;
+		public void write( javax.xml.stream.XMLStreamWriter writer) throws javax.xml.stream.XMLStreamException;
+		public boolean isProxy();
+		}
+	
+	
+	 abstract class Spreadsheet<T extends Row>
+		extends javax.swing.table.AbstractTableModel
+		{
+		protected java.util.List<T> rows=new java.util.Vector<T>();
+		protected java.util.List<Column> columns=new java.util.Vector<Column>();
+		protected Spreadsheet()
+			{
+			}
+		
+		public #javaName("${config.name}")Model get#javaName("${config.name}")Model()
+			{
+			return #javaName("${config.name}")Model.this;
+			}
+		
+		
+		public abstract String getName();
+		
+		protected  java.util.List<T> getRows()
+			{
+			return this.rows;
+			}
+		
+		protected  java.util.List<Column> getColumns()
+			{
+			return this.columns;
+			}
+		
+		protected T getRowAt(int index)
+			{
+			return getRows().get(index);
+			}
+		
+		protected Column getColumnAt(int index)
+			{
+			return getColumns().get(index);
+			}
+		
+		@Override
+		public Object getValueAt(int row,int col)
+			{
+			return getRowAt(row).getValueAt(col);
+			}
+		
+		@Override
+		public int getRowCount()
+			{
+			return getRows().size();
+			}
+		
+		@Override
+		public int getColumnCount()
+			{
+			return getColumns().size();
+			}
+			
+		@Override
+		public String getColumnName(int col)
+			{
+			return getColumnAt(col).getColumnName();
+			}
+		@Override
+		public Class<?> getColumnClass(int col)
+			{
+			return getColumnAt(col).getColumnClass();
+			}
+			
+		public void read(javax.xml.stream.XMLEventReader reader) throws javax.xml.stream.XMLStreamException
+			{
+			
+			}
+		public void write( javax.xml.stream.XMLStreamWriter writer) throws javax.xml.stream.XMLStreamException
+			{
+			}
+		
+		public T getRowById(java.math.BigInteger id)
+			{
+			for(T row: getRows())
+				{
+				if(row.getId().equals(id)) return row;
+				}
+			return null;
+			}
+		
+		java.math.BigInteger generateId(java.math.BigInteger MAX)
+			{
+			for(T row: getRows())
+				{
+				if(row.getId().compareTo(MAX)>=0)
+					{
+					MAX=row.getId().add(java.math.BigInteger.ONE);
+					}
+				}
+			return MAX;
+			}
+		
+		}
+	
+	
+	
+	
+	#foreach($sheet in  ${config.spreadsheets})
+
+	
+	/**
+	 * #javaName("${sheet.name}")Row
+	 */
+	 interface #javaName("${sheet.name}")Row
+		extends Row
+		{
+		#foreach($col in  ${sheet.columns})
+		
+		public void set#javaName("${col.name}")( #javaType1(${col.type}) ${col.name});
+		public #javaType1(${col.type}) get#javaName("${col.name}")();
+		
+		#end
+		
+		}
+
+
+	
+	/**
+	 * Proxy#javaName("${sheet.name}")Row
+	 */
+	 class Proxy#javaName("${sheet.name}")Row
+		implements #javaName("${sheet.name}")Row
+		{
+		private #javaName("${sheet.name}")Row _delegate=null;
+		public Proxy#javaName("${sheet.name}")Row(#javaName("${sheet.name}")Row delegate)
+		 	{
+		 	this._delegate=delegate;
+		 	}
+		
+		#javaName("${sheet.name}")Row delegate()
+			{
+			return this._delegate=null;
+			}
+		
+		#foreach($col in  ${sheet.columns})
+		
+		public void set#javaName("${col.name}")( #javaType1(${col.type}) ${col.name})
+			{
+			delegate().set#javaName("${col.name}")(${col.name});
+			}
+		
+		public  #javaType1(${col.type}) get#javaName("${col.name}")()
+			{
+			return delegate(). get#javaName("${col.name}")();
+			}
+		
+		#end
+		
+		@Override
+		public final java.math.BigInteger getId()
+			{
+			return delegate().getId();
+			}
+		
+		@Override
+		public final boolean isProxy()
+			{
+			return true;
+			}
+		
+		@Override
+		public Object getValueAt(int column)
+			{
+			return delegate().getValueAt(column);
+			}
+		
+		@Override
+		public void read( javax.xml.stream.XMLEventReader reader) throws javax.xml.stream.XMLStreamException
+			{
+			
+			}
+		@Override
+		public void write( javax.xml.stream.XMLStreamWriter writer) throws javax.xml.stream.XMLStreamException
+			{
+			
+			}
+		}
+	
+	/**
+	 * Default#javaName("${sheet.name}")Row
+	 */
+	 class Default#javaName("${sheet.name}")Row
+		implements #javaName("${sheet.name}")Row
+		{
+		private java.math.BigInteger _id=null;
+		
+		#foreach($col in  ${sheet.columns})
+		public  #javaType1(${col.type}) ${col.name} =null;
+		
+		#end
+		
+		
+		public Default#javaName("${sheet.name}")Row()
+		 	{
+		 	
+		 	}
+		
+		
+		@Override
+		public final java.math.BigInteger getId()
+			{
+			return _id;
+			}
+		
+		
+		
+		#foreach($col in  ${sheet.columns})
+		
+		public void set#javaName("${col.name}")( #javaType1(${col.type}) ${col.name})
+			{
+			this.${col.name}=${col.name};
+			}
+		
+		public  #javaType1(${col.type}) get#javaName("${col.name}")()
+			{
+			return this.${col.name};
+			}
+		
+		#end
+		
+		@Override
+		public Object getValueAt(int column)
+			{
+			switch(column)
+				{
+				#foreach($col in  ${sheet.columns})
+				case ( $velocityCount -1 ) : return this.get#javaName("${col.name}")();
+				#end
+				default: return null;
+				}
+			}
+		
+		@Override
+		public final boolean isProxy()
+			{
+			return false;
+			}
+		
+		@Override
+		public void read( javax.xml.stream.XMLEventReader reader) throws javax.xml.stream.XMLStreamException
+			{
+			
+			}
+		@Override
+		public void write( javax.xml.stream.XMLStreamWriter writer) throws javax.xml.stream.XMLStreamException
+			{
+			
+			}
+		}
+
+	
+	
+	
+	/**
+	 * #javaName("${sheet.name}")SpreadSheet
+	 */
+	 class #javaName("${sheet.name}")SpreadSheet
+		extends Spreadsheet<#javaName("${sheet.name}")Row>
+		{
+		
+		/** constructor */
+		public #javaName("${sheet.name}")SpreadSheet()
+		 	{
+		 	Column c=null;
+		 	
+			#foreach($col in  ${sheet.columns})
+
+		
+
+			c=new Column()
+				{
+				@Override
+				public String getColumnName()
+					{
+					return "${col.name}";
+					}
+			
+				@Override
+				public Class<?> getColumnClass()
+					{
+					return String.class;
+					}
+				};
+		
+			super.columns.add(c);
+			
+			#end
+			
+			}
+		
+		@Override
+		public String getName()
+			{
+			return "${sheet.name}";
+			}
+		}
+	
+	private #javaName("${sheet.name}")SpreadSheet ${sheet.name}_spreadsheet = new  #javaName("${sheet.name}")SpreadSheet();
+	
+	public 	#javaName("${sheet.name}")SpreadSheet get#javaName("${sheet.name}")SpreadSheet()
+		{
+		return this.${sheet.name}_spreadsheet;
+		}
+	
+	#end
+	
+	private java.util.List<Spreadsheet> spreadsheets=new  java.util.Vector<Spreadsheet>();
+	
+	public  java.util.List<Spreadsheet> getSpreadSheets()
+		{
+		return this.spreadsheets;
+		}
+	
+	/**
+	 * model Constructor
+	 *
+	 */
+	public  #javaName("${config.name}")Model()
+		{
+		#foreach($sheet in  ${config.spreadsheets})
+		
+		this.spreadsheets.add( ${sheet.name}_spreadsheet );
+		
+		#end
+		}
+	
+
+	public java.math.BigInteger generateId()
+		{
+		java.math.BigInteger MAX=java.math.BigInteger.ONE;
+		for(Spreadsheet S: getSpreadSheets())
+			{
+			MAX=S.generateId(MAX);
+			}
+		return MAX;
+		}
+
+
+	public void read( javax.xml.stream.XMLEventReader reader) throws javax.xml.stream.XMLStreamException
+		{
+		while(reader.hasNext())
+			{
+			javax.xml.stream.events.XMLEvent evt=reader.nextEvent();
+			}
+		}
+	
+	}
+
+
+/******************
+ *
+ *  #javaName("${config.name}")Frame
+ *
+ */
+public class #javaName("${config.name}")Frame
+	extends javax.swing.JFrame
+	{
+	private #javaName("${config.name}")Model model=null;
+	
+	abstract class AbstractEditorPane
+		extends javax.swing.JPanel
+		{
+		protected javax.swing.JPanel mainPane;
+		protected AbstractEditorPane()
+			{
+			super(new java.awt.BorderLayout());
+			this.mainPane=new javax.swing.JPanel(new java.awt.BorderLayout());
+			this.add(mainPane);
+			
+			}
+		}
+	
+	
+	#foreach($sheet in  ${config.spreadsheets})
+	
+	class  #javaName("${sheet.name}")Editor
+		extends AbstractEditorPane
+		{
+		#foreach($col in  ${sheet.columns})
+		
+		private javax.swing.JTextField tfield_${col.name}=null;
+		
+		#end
+		
+		#javaName("${sheet.name}")Editor()
+			{
+			java.awt.GridBagLayout layout = new java.awt.GridBagLayout();
+			super.mainPane.setLayout(layout);
+			int gridx=0;
+			int gridy=0;
+
+			#foreach($col in  ${sheet.columns})
+			
+				{
+				java.awt.GridBagConstraints c = new java.awt.GridBagConstraints();
+				c.gridy=gridy;
+				c.gridx=0;
+				c.anchor=java.awt.GridBagConstraints.LINE_START;
+				javax.swing.JLabel label=new javax.swing.JLabel("${col.name}");
+				super.mainPane.add(label, c);
+				
+				c = new java.awt.GridBagConstraints();
+				c.gridy=gridy;
+				c.gridx=0;
+				c.anchor=java.awt.GridBagConstraints.LINE_START;
+				this.tfield_${col.name}=new javax.swing.JTextField("");
+				label.setLabelFor(this.tfield_${col.name});
+				c.anchor=
+				super.mainPane.add(this.tfield_${col.name}, c);
+				
+				++gridy;
+				}
+			#end
+			}
+		}
+	
+	
+	class  #javaName("${sheet.name}")Tab
+		extends javax.swing.JPanel
+		{
+		}
+	
+	#end
+	
+	
+	#javaName("${config.name}")Frame( #javaName("${config.name}")Model model)
+		{
+		super("${config.name}");
+		this.model=model;
+		
+		javax.swing.JPanel mainPane=new javax.swing.JPanel(new java.awt.BorderLayout());
+		setContentPane(mainPane);
+		
+		javax.swing.JTabbedPane tabbedPane=new javax.swing.JTabbedPane();
+		for(#javaName("${config.name}")Model.Spreadsheet sheet: model.getSpreadSheets())
+			{
+			javax.swing.JPanel myComponent=new javax.swing.JPanel();
+			javax.swing.JPanel left=new javax.swing.JPanel(new java.awt.BorderLayout());
+			javax.swing.JPanel right=new javax.swing.JPanel(new java.awt.BorderLayout());
+			
+			
+			javax.swing.JTable table=new javax.swing.JTable(sheet);
+			
+			javax.swing.JScrollPane scroll=new javax.swing.JScrollPane(table);
+			
+			
+			
+			
+			right.add(scroll,java.awt.BorderLayout.CENTER);
+			
+			
+			javax.swing.JPanel bot=new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING));
+			
+			
+			javax.swing.Action act=new javax.swing.AbstractAction("New "+sheet.getName())
+				{
+				public void actionPerformed(java.awt.event.ActionEvent evt)
+					{
+					}
+				};
+			
+			bot.add( new javax.swing.JButton(act) );
+			
+			act=new javax.swing.AbstractAction("Edit "+sheet.getName())
+				{
+				public void actionPerformed(java.awt.event.ActionEvent evt)
+					{
+					}
+				};
+			
+			bot.add( new javax.swing.JButton(act) );
+			
+			
+			act=new javax.swing.AbstractAction("Remove "+sheet.getName())
+				{
+				public void actionPerformed(java.awt.event.ActionEvent evt)
+					{
+					}
+				};
+			
+			bot.add( new javax.swing.JButton(act) );
+			right.add(bot,java.awt.BorderLayout.SOUTH);
+			
+			javax.swing.JEditorPane editorPane=new javax.swing.JEditorPane(
+				"text/html",
+				"<html><body></body></html>"
+				);
+			scroll=new javax.swing.JScrollPane(editorPane);
+			left.add(scroll,java.awt.BorderLayout.CENTER);
+			
+			
+			javax.swing.JSplitPane split=new javax.swing.JSplitPane(javax.swing.JSplitPane.HORIZONTAL_SPLIT,right,left);
+			myComponent.add(split,java.awt.BorderLayout.CENTER);
+		 	tabbedPane.addTab(sheet.getName(), myComponent);
+			}
+		}
+	
+	public void main(String args[])
+		{
+		
+		}
+	}
