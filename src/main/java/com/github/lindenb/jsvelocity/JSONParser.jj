@@ -22,6 +22,8 @@ STATIC=false;
 PARSER_BEGIN(JSONParser)
 
 package com.github.lindenb.jsvelocity;
+import com.github.lindenb.jsvelocity.json.*;
+import com.github.lindenb.jsvelocity.json.impl.*;
 import java.util.*;
 import java.io.*;
 import java.math.*;
@@ -29,149 +31,6 @@ import java.math.*;
 @SuppressWarnings("unchecked")
 public class JSONParser
 {
-public static abstract class JSNode
-	{
-	JSNode parent=null;
-	
-	public boolean isArray() { return false;}
-	public boolean isObject() { return false;}
-	public boolean isNumber() { return false;}
-	public boolean isString() { return false;}
-	public boolean isBoolean() { return false;}
-	public boolean isNull() { return false;}
-	public boolean isTrue() { return false;}
-	public boolean isFalse() { return false;}
-	public boolean isDecimal() { return false;}
-	public boolean isInteger() { return false;}
-	public boolean isComplex() { return isArray() || isObject();}
-	public abstract Object getValue();
-	
-	public JSNode getParentNode()
-		{
-		return parent;
-		}
-	public void setParentNode(JSNode parent)
-		{
-		this.parent=parent;
-		}
-	public String toString()
-		{
-		return String.valueOf(getValue());
-		}
-	}
-
-public static class JSArray
-	extends JSNode 
-	implements java.util.List<JSNode>
-	{
-	private java.util.List<JSNode> array=new java.util.ArrayList<JSNode>();
-	@Override
-	public boolean isArray() { return true;}
-	
-	public Object getValue()
-		{
-		return this.array;
-		}
-	
-	  public  int size(){ return this.array.size();}
-	  public  boolean isEmpty(){ return this.array.isEmpty();}
-	  public  boolean contains(java.lang.Object o){ return this.array.contains(o);}
-	  public  java.util.Iterator<JSNode> iterator(){ return this.array.iterator();}
-	  public  java.lang.Object[] toArray(){ return this.array.toArray();}
-	  public  <JSNode> JSNode[] toArray(JSNode a[]){ return this.array.toArray(a);}
-	  public  boolean add(JSNode n){ return this.array.add(n);}
-	  public  boolean remove(java.lang.Object o){ return this.array.remove(o);}
-	  public  boolean containsAll(java.util.Collection<?> c){ return this.array.containsAll(c);}
-	  public  boolean addAll(java.util.Collection<? extends JSNode> c){ return this.array.addAll(c);}
-	  public  boolean addAll(int i, java.util.Collection<? extends JSNode> c) { return this.array.addAll(i,c);}
-	  public  boolean removeAll(java.util.Collection<?> c){ return this.array.removeAll(c);}
-	  public  boolean retainAll(java.util.Collection<?> c){ return this.array.retainAll(c);}
-	  public  void clear(){ this.array.clear();}
-	  public  boolean equals(java.lang.Object o){ return o!=null && o.getClass()==this.getClass() && this.array.equals(((JSArray)o).array);}
-	  public  int hashCode(){ return this.array.hashCode();}
-	  public  JSNode get(int i){ return this.array.get(i);}
-	  public  JSNode set(int i,JSNode E){ return this.array.set(i,E);}
-	  public  void add(int i,JSNode E){  this.array.add(i,E);}
-	  public  JSNode remove(int i){ return this.array.remove(i);}
-	  public  int indexOf(java.lang.Object o){ return this.array.indexOf(o);}
-	  public  int lastIndexOf(java.lang.Object o){ return this.array.lastIndexOf(o);}
-	  public  java.util.ListIterator<JSNode> listIterator(){ return this.array.listIterator();}
-	  public  java.util.ListIterator<JSNode> listIterator(int i){ return this.array.listIterator(i);}
-	  public  java.util.List<JSNode> subList(int a, int b){ return this.array.subList(a,b);}
-
-	
-	}
-
-public static class JSObject
-	extends JSNode
-	implements java.util.Map<String,JSNode>
-	{
-	java.util.Map<String,JSNode> map=new java.util.LinkedHashMap<String,JSNode>();
-
-	public boolean isObject() { return true;}
-
-	public Object getValue()
-		{
-		return this.map;
-		}
-	
-	  public  int size(){ return this.map.size();}
-	  public  boolean isEmpty(){ return this.map.isEmpty();}
-	  public  boolean containsKey(java.lang.Object o){ return this.map.containsKey(o);}
-	  public  boolean containsValue(java.lang.Object o){ return this.map.containsValue(o);}
-	  public  JSNode get(java.lang.Object k){ return this.map.get(k);}
-	  public  JSNode put(String k, JSNode v){ return this.map.put(k,v);}
-	  public  JSNode remove(java.lang.Object o){ return this.map.remove(o);}
-	  @Override public void putAll(java.util.Map<? extends String, ? extends JSNode> c) {  this.map.putAll(c);}
-	  public  void clear(){  this.map.clear();}
-	  public  java.util.Set<String> keySet(){ return this.map.keySet();}
-	  public  java.util.Collection<JSNode> values(){ return this.map.values();}
-	  public  java.util.Set<java.util.Map.Entry<String,JSNode>> entrySet(){ return this.map.entrySet();}
-	  public  boolean equals(java.lang.Object o){ return o!=null && o.getClass()==this.getClass() && this.map.equals(((JSObject)o).map);}
-	  public  int hashCode(){ return this.map.hashCode();}
-
-	}
-	
-public static class JSNull
-	extends JSNode
-	{
-	JSNode parent;
-	public Object getValue()
-		{
-		return null;
-		}
-	
-	public boolean isNull() { return true;}
-	public String toString()
-		{
-		return "";
-		}
-	}	
-
-public static class JSGenericNode<T>
-	extends JSNode
-	{
-	private T value;
-	JSGenericNode(T value)
-		{
-		this.value=value;
-		}
-	
-	public boolean isNumber() { return value instanceof Number;}
-	public boolean isString() { return value instanceof String;}
-	public boolean isBoolean() {  return value instanceof Boolean;}
-	public boolean isTrue() { return isBoolean() && value==Boolean.TRUE;}
-	public boolean isFalse() { return isBoolean() && value==Boolean.FALSE;}
-	
-
-	
-	public Object getValue()
-		{
-		return value;
-		}
-	
-
-	}
 
 private String unescape(String s) throws ParseException
 	{
@@ -309,30 +168,30 @@ public JSNode terminalNode():
 
 public JSNull nilNode():{}
 	{
-	<NULL> { return new JSNull(); }
+	<NULL> { return new JSNullImpl(); }
 	}
 
-public JSGenericNode<Boolean> boolNode():{}
+public JSPrimitive boolNode():{}
 	{
 	(
-	  <TRUE>  { return new JSGenericNode<Boolean>(Boolean.TRUE); }
-	| <FALSE> { return new JSGenericNode<Boolean>(Boolean.FALSE);}
+	  <TRUE>  { return new JSPrimitiveImpl(Boolean.TRUE); }
+	| <FALSE> { return new JSPrimitiveImpl(Boolean.FALSE);}
 	)
 	}
 
-public JSGenericNode<Number> intNode():{	Token t;}
+public JSPrimitive intNode():{	Token t;}
 	{
-	t=<INT_NUMBER> { return new JSGenericNode<Number>(new Integer(t.image)); }
+	t=<INT_NUMBER> { return new JSPrimitiveImpl(new Integer(t.image)); }
 	}
 
-public JSGenericNode<Number> decimalNode():{	Token t;}
+public JSPrimitive decimalNode():{	Token t;}
 	{
-	t=<FLOATING_NUMBER> {return new JSGenericNode<Number>(new Double(t.image)); }
+	t=<FLOATING_NUMBER> {return new JSPrimitiveImpl(new Double(t.image)); }
 	}
 
-public JSGenericNode<String> stringNode():{	String s;}
+public JSPrimitive stringNode():{	String s;}
 	{
-	s=characters() { return new JSGenericNode<String>(s); }
+	s=characters() { return new JSPrimitiveImpl(s); }
 	}
 
 
@@ -358,7 +217,7 @@ private String characters():
 	}
 
 public JSArray arrayNode():
-	{ JSArray vector= new JSArray(); JSNode o;}
+	{ JSArrayImpl vector= new JSArrayImpl(); JSNode o;}
 	{
 	openArray() ( o=any() {o.setParentNode(vector);vector.add(o);} (comma() o=any() {o.setParentNode(vector);vector.add(o);} ) * )? closeArray()
 		{
@@ -367,7 +226,7 @@ public JSArray arrayNode():
 	}
 
 public JSObject objectNode():
-	{JSObject map= new JSObject(); }
+	{JSObjectImpl map= new JSObjectImpl(); }
 	{
 	openObject() ( keyValue(map) (comma() keyValue(map))*)? closeObject()
 		{
@@ -382,7 +241,7 @@ public void colon():
    <COLON>
    }
 
-private void keyValue( JSObject map):
+private void keyValue( JSObjectImpl map):
 	{String k; JSNode v;}
 	{
 	(k=characters() colon() v=any())

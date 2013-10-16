@@ -9,7 +9,7 @@
 
 <target name="all" depends="tests"></target>
 
-<target name="tests" depends="jsvelocity">
+<target name="tests" depends="jsvelocity,webjsvelocity">
 	<mkdir dir="tmp"/>
 	 <java jar="dist/jsvelocity.jar"
            fork="true"
@@ -20,6 +20,43 @@
            	 <arg value="./src/test/resources/velocity/test.vm"/>
          </java>
          
+</target>
+	
+<target name="testwebapp" depends="webjsvelocity">
+	<mkdir dir="tmp"/>
+	 <java jar="dist/webjsvelocity.jar"
+           fork="true"
+           failonerror="true"
+           >
+           	<arg value="-f"/> <arg value="all"/> <arg value="./src/test/resources/json/test.json"/>
+           	<arg value="-C"/> <arg value="STRING"/> <arg value="java.lang.String"/>
+           	 <arg value="./src/test/resources/velocity/web.vm"/>
+         </java>
+         
+</target>
+
+
+<target name="webjsvelocity" depends="ivy.libs,generate-sources">
+	<mkdir dir="dist"/>
+	<mkdir dir="tmp"/>
+	<mkdir dir="tmp/velocity"/>
+	
+	<javac srcdir="src/main/java:src/main/generated-sources/javacc"
+		destdir="tmp" debug="true" includeantruntime="no">
+		<classpath refid="lib.path.id"/>
+		<include name="**/WebJSVelocity.java" />
+	</javac>
+	<pathconvert property="jsvelocity.claspath2" pathsep=" ">
+		<path refid="lib.path.id" />
+	</pathconvert>	
+	<jar destfile="dist/webjsvelocity.jar" basedir="tmp">
+		<manifest>
+			<attribute name="Built-By" value="${user.name}"/>
+			<attribute name="Main-Class" value=" com.github.lindenb.jsvelocity.WebJSVelocity"/>
+		 	<attribute name="Class-Path" value="${jsvelocity.claspath2}" />
+		</manifest>
+	</jar>
+	<delete dir="tmp"/>
 </target>
 
 
@@ -54,10 +91,21 @@
 	<delete file="$jj.dest}/ParseException.java"/>
 	<delete file="${jj.dest}/Token.java"/>
 	<delete file="${jj.dest}/SimpleCharStream.java"/>
+	<delete file="${jj.dest}/json/expr/TokenMgrError.java"/>
+	<delete file="$jj.dest}/json/expr/ParseException.java"/>
+	<delete file="${jj.dest}/json/expr/Token.java"/>
+	<delete file="${jj.dest}/json/expr/SimpleCharStream.java"/>
+
 	<exec executable="javacc">
 		<arg value="-OUTPUT_DIRECTORY=${jj.dest}"/>
 		<arg value="${jj.dir}/JSONParser.jj"/>
 	</exec>
+	
+	<exec executable="javacc">
+		<arg value="-OUTPUT_DIRECTORY=${jj.dest}/json/expr"/>
+		<arg value="${jj.dir}/JSONExprParser.jj"/>
+	</exec>
+
 </target>	
 
 

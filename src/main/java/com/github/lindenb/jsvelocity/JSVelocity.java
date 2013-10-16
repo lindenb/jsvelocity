@@ -1,12 +1,20 @@
 package com.github.lindenb.jsvelocity;
-import java.util.logging.Logger;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 import java.io.*;
+import java.net.URL;
+
+import javax.xml.namespace.QName;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
+
+import com.github.lindenb.jsvelocity.json.JSNode;
 
 
 
@@ -17,6 +25,73 @@ public class JSVelocity
 private static final Logger LOG=Logger.getLogger("JSVelocity");
 VelocityContext context=new VelocityContext();
 private File outDir=null;
+
+
+public static abstract class MiniDom
+	{
+	private DomElement parent=null;
+	public Map<QName,String> getAttributes()
+		{
+		return Collections.emptyMap();
+		}
+	public List<MiniDom> getChildren()
+		{
+		return Collections.emptyList();
+		}
+	public List<DomElement> getElements()
+		{
+		 List<DomElement> L=new ArrayList<JSVelocity.DomElement>();
+		 for(MiniDom E:getChildren())
+			 {
+			 if(E.isElement()) L.add((DomElement)E);
+			 }
+		 return L;
+		}
+	public boolean isElement() { return false;}
+	public boolean isText() { return false;}
+	public DomElement getParentNode() { return parent;}
+	}
+
+public static  class DomElement extends MiniDom
+	{
+	private QName name;
+	private Map<QName,String> attrs=new HashMap<QName, String>();
+	private List<MiniDom> children=new ArrayList<JSVelocity.MiniDom>();
+	
+	@Override
+	public List<MiniDom> getChildren()
+		{
+		return children;
+		}
+	
+	@Override
+	public Map<QName, String> getAttributes()
+		{
+		return attrs;
+		}
+	
+	@Override
+	public boolean isElement()
+		{
+		return true;
+		}
+	}
+
+public static  class DomText extends MiniDom
+	{
+	private StringBuilder content=new StringBuilder();
+	
+	public String getTextContent()
+		{
+		return content.toString();
+		}
+	
+	@Override
+	public String toString()
+		{
+		return getTextContent();
+		}
+	}
 
 public static class Picture
 	{
@@ -32,67 +107,6 @@ public static class Picture
 	public int getHeight()
 		{
 		return 1;
-		}
-	}
-
-public static class Tool
-	{
-	
-	
-	
-	public String escapeC(Object o)
-		{
-		if(o==null) return "";
-		String s=String.valueOf(o);
-		StringBuilder b=new StringBuilder(s.length());
-		for(int i=0;i< s.length();++i)
-			{
-			char c=s.charAt(i);
-			switch(c)
-				{
-				case '\n': b.append("\\n");break;
-				case '\r': b.append("\\r");break;
-				case '\t': b.append("\\t");break;
-				case '\\': b.append("\\\\");break;
-				case '\'': b.append("\\\'");break;
-				case '\"': b.append("\\\"");break;
-				default: b.append(c);break;
-				}
-			}
-		return b.toString();
-		}
-	
-	public String escapeXml(Object o)
-		{
-		if(o==null) return "";
-		String s=String.valueOf(o);
-		StringBuilder b=new StringBuilder(s.length());
-		for(int i=0;i< s.length();++i)
-			{
-			char c=s.charAt(i);
-			switch(c)
-				{
-				case '<': b.append("&lt;");break;
-				case '>': b.append("&gt;");break;
-				case '&': b.append("&amp;");break;
-				case '\'': b.append("&apos;");break;
-				case '\"': b.append("&quot;");break;
-				default: b.append(c);break;
-				}
-			}
-		return b.toString();
-		}
-	
-	public String escapeHttp(Object o) throws Exception
-		{
-		if(o==null) return "";
-		return java.net.URLEncoder.encode(o.toString(),"UTF-8");
-		}
-	
-	@Override
-	public String toString()
-		{
-		return "jsvelocity.tool";
 		}
 	}
 
@@ -301,7 +315,7 @@ private void run(String args[]) throws Exception
 	
 	MultiWriter out=new MultiWriter();
 	put("out",out);
-	put("tool",new Tool());
+	put("tool",new Tools());
 	put("now",new java.sql.Timestamp(System.currentTimeMillis()));
 	File file=new File(args[optind++]);
 	LOG.info("Reading VELOCITY template from file "+file);
@@ -313,7 +327,7 @@ private void run(String args[]) throws Exception
 	Template template = ve.getTemplate(file.getName());
 	template.merge( this.context, out);
 	out.close();
-        }
+    }
 
 
 public static void main(String args[]) throws Exception
