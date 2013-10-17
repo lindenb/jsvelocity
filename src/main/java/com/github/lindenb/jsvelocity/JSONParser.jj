@@ -181,12 +181,12 @@ public JSPrimitive boolNode():{}
 
 public JSPrimitive intNode():{	Token t;}
 	{
-	t=<INT_NUMBER> { return new JSPrimitiveImpl(new Integer(t.image)); }
+	t=<INT_NUMBER> { return new JSPrimitiveImpl(new java.math.BigInteger(t.image)); }
 	}
 
 public JSPrimitive decimalNode():{	Token t;}
 	{
-	t=<FLOATING_NUMBER> {return new JSPrimitiveImpl(new Double(t.image)); }
+	t=<FLOATING_NUMBER> {return new JSPrimitiveImpl(new java.math.BigDecimal(t.image)); }
 	}
 
 public JSPrimitive stringNode():{	String s;}

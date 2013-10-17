@@ -28,7 +28,32 @@
 		"meancov": 30.0
 		}
 		]
-	}],
+	},
+	{
+	"sequencer":"MiSeq",
+	"flowcell":"C3VATACYY",
+	"name":"131011_C3VATACYY_62",
+	"date":"2013-10-11",
+	"comment":"Another comment",
+	"samples":[
+		{
+		"name":"CD0001",
+		"meancov": 11
+		},
+		{
+		"name":"CD0006",
+		"meancov": 21.0
+		}
+		,
+		{
+		"name":"CD0008",
+		"meancov": null
+		}
+		]
+	}
+	
+	
+	],
 "samples":[	
 	{ "name":"CD0001" },
 	{ "name":"CD0002" },
@@ -37,7 +62,20 @@
 	{ "name":"CD0005" },	
 	{ "name":"CD0006" },	
 	{ "name":"CD0007" },	
-	{ "name":"CD0008" }
+	{ "name":"CD0008" },
+	{ "name":"CD0009" }
+	],
+"projects":[
+	{
+	"name":"Disease1",
+	"description": "sequencing Project 1",
+	"samples":["CD0001","CD0002","CD0006","CD0009"]
+	},
+	{
+	"name":"Disease2",
+	"description": "sequencing Project 2",
+	"samples":["CD0002","CD0003","CD0008","CD0009"]
+	}
 	]
 
 }

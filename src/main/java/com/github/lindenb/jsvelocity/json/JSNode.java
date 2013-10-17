@@ -15,6 +15,8 @@ public interface JSNode
 	public boolean isDecimal();
 	public boolean isInteger();
 	public boolean isComplex();
+	public boolean isBigDecimal();
+	public boolean isBigInteger();
 	public abstract Object getValue();
 	public String getId();
 	public JSNode findById(String s);

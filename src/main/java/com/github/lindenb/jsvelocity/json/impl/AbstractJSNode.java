@@ -60,7 +60,15 @@ public abstract class AbstractJSNode
 	@Override
 	public abstract Object getValue();
 	
+	@Override
+	public boolean isBigDecimal() {
+		return false;
+		}
 	
+	@Override
+	public boolean isBigInteger() {
+		return false;
+		}
 	
 	protected long id()
 		{

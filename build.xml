@@ -87,10 +87,13 @@
 	<property name="jj.dir" value="./src/main/java/com/github/lindenb/jsvelocity"/>
 	<property name="jj.dest" value="./src/main/generated-sources/javacc/com/github/lindenb/jsvelocity"/>
 	<mkdir dir="${jj.dest}"/>
+	<mkdir dir="${jj.dest}/json/expr"/>
+	
 	<delete file="${jj.dest}/TokenMgrError.java"/>
 	<delete file="$jj.dest}/ParseException.java"/>
 	<delete file="${jj.dest}/Token.java"/>
 	<delete file="${jj.dest}/SimpleCharStream.java"/>
+	
 	<delete file="${jj.dest}/json/expr/TokenMgrError.java"/>
 	<delete file="$jj.dest}/json/expr/ParseException.java"/>
 	<delete file="${jj.dest}/json/expr/Token.java"/>

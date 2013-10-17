@@ -1,5 +1,8 @@
 package com.github.lindenb.jsvelocity.json.impl;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import com.github.lindenb.jsvelocity.json.JSPrimitive;
 
 public class JSPrimitiveImpl
@@ -17,7 +20,14 @@ public class JSPrimitiveImpl
 	@Override public boolean isBoolean() {  return value instanceof Boolean;}
 	@Override public boolean isTrue() { return isBoolean() && value==Boolean.TRUE;}
 	@Override public boolean isFalse() { return isBoolean() && value==Boolean.FALSE;}
-	
+	@Override
+	public boolean isBigDecimal() {
+		return value instanceof BigDecimal;
+		}
+	@Override
+	public boolean isBigInteger() {
+		return value instanceof BigInteger;
+		}
 
 	
 	public Object getValue()

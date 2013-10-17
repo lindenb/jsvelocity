@@ -18,7 +18,7 @@ ivy.install.version=2.3.0
 The compile process requires the javaCC code compiler.
 
 ```bash
-ant
+ant jsvelocity
 ```
 
 Usage
@@ -44,6 +44,64 @@ Default objects
 * tool : utility containing the following method: escapeC(String), escapeXml(String), escapeHttp(String)
 * now: java.sql.Timestamp at startup
 
+JSON
+---------------
+Nodes implement the following interfaces:
+
+```java
+package com.github.lindenb.jsvelocity.json;
+
+import java.util.List;
+
+public interface JSNode
+	{
+	public boolean isArray();
+	public boolean isObject();
+	public boolean isNumber();
+	public boolean isString();
+	public boolean isBoolean();
+	public boolean isNull();
+	public boolean isTrue();
+	public boolean isFalse();
+	public boolean isDecimal();
+	public boolean isInteger();
+	public boolean isComplex();
+	public boolean isBigDecimal();
+	public boolean isBigInteger();
+	public abstract Object getValue();
+	public String getId();
+	public JSNode findById(String s);
+	public JSNode getParentNode();
+	public String getPath();
+	public JSNode getRoot();
+	}
+
+public interface JSArray
+	extends JSNode,List<JSNode>
+	{
+
+	}
+
+
+public interface JSNull
+	extends JSNode
+	{
+
+	}
+
+public interface JSObject
+	extends JSNode,Map<String, JSNode>
+	{
+
+	}
+
+public interface JSPrimitive
+	extends JSNode
+	{
+	}
+
+```
+numbers are stored using `java.math.BigInteger` or `java.math.BigDecimal`
 
 
 
@@ -139,4 +197,56 @@ Hello
 
 
 ```
+
+
+webjsvelocity
+=============
+Web version of jsvelocity based on <b>Jetty</b>
+
+
+Compilation
+-----------
+
+```bash
+$ ant webjsvelocity
+```
+
+
+Options
+-------
+* -s (key) (string) add this string into the context.
+* -e (key) (json-expr) add this json into the context.
+* -f (key) (json-file) add this json into the context.
+* -F (key) (json-file) add this json into the context. Dynamic Loading: the JSON file is reloaded for each request
+* -i (key) and read stdin-json to the context.
+* -C (key) (class.qualified.Name) add this Class into the context.
+* -c (key) (class.qualified.Name) add an instance of Class into the context.
+* -P (port) listen port.
+
+Default objects
+---------------
+* out : the http writer (default is stdout).
+* tool : utility containing the following method: escapeC(String), escapeXml(String), escapeHttp(String)
+* now: java.sql.Timestamp of the request
+* request: jetty current httpRequest
+* response: jetty current httpResponse
+* baseRequest :  current jetty Request
+
+
+Example:
+--------
+```bash
+java -jar dist/webjsvelocity.jar  \
+	-F lims src/test/resources/json/lims.json \
+	src/test/resources/velocity/lims.vm
+	
+2013-10-17 12:43:35.566:INFO:oejs.Server:main: jetty-9.1.0.M0
+2013-10-17 12:43:35.602:INFO:oejs.ServerConnector:main: Started ServerConnector@72dcb6{HTTP/1.1}{0.0.0.0:8080}
+(...)
+
+```
+
+
+
+
 
