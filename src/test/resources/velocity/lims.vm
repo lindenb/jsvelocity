@@ -3,6 +3,7 @@
 #macro(anchorRun $name)#anchorShow("run",${name})#end
 #macro(anchorSample $name)#anchorShow("sample",${name})#end
 #macro(anchorProject $name)#anchorShow("project",${name})#end
+#macro(mindepth $d)#if(!$d.isNull() && $d.number && $d.value < 11.0 ) <span style="color:red;">$d</span> #{else}$d#end#end
 ${response.setContentType("text/html;charset=utf-8")}
 <html>
 <head>
@@ -33,8 +34,8 @@ table, th, td
   <td>#anchorSequencer(${sequencer.name})</td>
   <td>
   #foreach($run in ${lims.run})
-    #if(${run.sequencer} == ${sequencer.name} )
-     <span>#anchorRun(${run.name}) </span>
+    #if("${run.sequencer}" == "${sequencer.name}" )
+     <span>#anchorRun(${run.name})</span><br/>
     #end
   #end
   </td>
@@ -134,8 +135,8 @@ table, th, td
 			  <td>#anchorRun(${run.name})</td>
 			  <td>${run.date}</td>
 			  <td>#anchorSequencer(${run.sequencer})</td>
-			  <td>${indi.meancov}</td>
-			  <td>${indi.comment}</td>
+			  <td>#mindepth(${indi.meancov})</td>
+			  <td>#if(${indi.containsKey("comment")})${indi.comment}#end</td>
 			</tr>
 			#end
 		#end
@@ -185,8 +186,8 @@ table, th, td
 #foreach($indi in ${run.samples}) 
 <tr>
   <td>#anchorSample(${indi.name})</td>
-  <td>${indi.meancov}</td>
-  <td>${indi.comment}</td>
+  <td>#mindepth(${indi.meancov})</td>
+  <td>#if(${indi.containsKey("comment")})${indi.comment}#end</td>
 </tr>
 
 #end
@@ -206,7 +207,7 @@ table, th, td
 
 <h2>Samples</h2>
 <table>
-<tr><th>Sample</th><th>Run</th><th>Date</th><th>Sequencer</th><th>MeanCov</th></tr>
+<tr><th>Sample</th><th>Run</th><th>Date</th><th>Sequencer</th><th>MeanCov</th><th>Comment</th></tr>
 #foreach($sample in ${project.samples})
 #set($foundseq=false)
 
@@ -220,7 +221,8 @@ table, th, td
 	  <td>#anchorRun(${run.name})</td>
 	  <td>${run.date}</td>
 	  <td>#anchorSequencer(${run.sequencer})</td>
-	  <td>${indi.meancov}</td>
+	  <td>#mindepth(${indi.meancov})</td>
+	  <td>#if(${indi.containsKey("comment")})${indi.comment}#end</td>
 	</tr>
 	#end
 	#end
