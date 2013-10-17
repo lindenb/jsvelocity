@@ -235,6 +235,12 @@ Default objects
 
 Example:
 --------
+
+A test with :
+
+* JSON Data: https://github.com/lindenb/jsvelocity/blob/master/src/test/resources/json/lims.json 
+* Velocity Macros: https://github.com/lindenb/jsvelocity/blob/master/src/test/resources/velocity/lims.vm
+
 ```bash
 java -jar dist/webjsvelocity.jar  \
 	-F lims src/test/resources/json/lims.json \
@@ -247,6 +253,7 @@ java -jar dist/webjsvelocity.jar  \
 ```
 
 
+<img src="http://i.imgur.com/Yx5yakC.jpg"/>
 
 
 

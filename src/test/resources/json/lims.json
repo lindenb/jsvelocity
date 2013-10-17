@@ -50,6 +50,20 @@
 		"meancov": null
 		}
 		]
+	},
+	{
+	"sequencer":"MiSeq",
+	"flowcell":"C4VATACYZ",
+	"name":"131012_C4VATACYZ_63",
+	"date":"2013-10-12",
+	"comment":"Another comment",
+	"samples":[
+		{
+		"name":"CD0010",
+		"meancov":1,
+		"comment":"Failed, please, re-sequence"
+		}
+		]
 	}
 	
 	
@@ -63,7 +77,8 @@
 	{ "name":"CD0006" },	
 	{ "name":"CD0007" },	
 	{ "name":"CD0008" },
-	{ "name":"CD0009" }
+	{ "name":"CD0009" },
+	{ "name":"CD0010" }
 	],
 "projects":[
 	{

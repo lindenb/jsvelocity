@@ -125,6 +125,7 @@ table, th, td
   <th>Date</th>
   <th>Sequencer</th>
   <th>Mean Cov</th>
+  <th>Comment</th>
 </tr>
 	#foreach($run in ${lims.run})
 		#foreach($indi in ${run.samples}) 
@@ -134,6 +135,7 @@ table, th, td
 			  <td>${run.date}</td>
 			  <td>#anchorSequencer(${run.sequencer})</td>
 			  <td>${indi.meancov}</td>
+			  <td>${indi.comment}</td>
 			</tr>
 			#end
 		#end
@@ -178,12 +180,13 @@ table, th, td
 <h2>Samples</h2>
 <table>
 <tr>
-  <th>Name</th><th>MeanCov</th>
+  <th>Name</th><th>MeanCov</th><th>Comment</th>
 </tr>
 #foreach($indi in ${run.samples}) 
 <tr>
   <td>#anchorSample(${indi.name})</td>
   <td>${indi.meancov}</td>
+  <td>${indi.comment}</td>
 </tr>
 
 #end
