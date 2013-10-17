@@ -122,6 +122,7 @@ public abstract class AbstractJSNode
 			}
 		}
 	
+	
 	@Override
 	public final JSNode getRoot()
 		{

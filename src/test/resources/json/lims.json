@@ -1,0 +1,43 @@
+{
+"sequencer":[
+	{
+	"name":"HiSeq"
+	},
+	{
+	"name":"MiSeq"
+	}
+	],
+"run":[	{
+	"sequencer":"HiSeq",
+	"flowcell":"C2AVTACXX",
+	"name":"131010_C2AVTACXX_61",
+	"date":"2013-10-10",
+	"comment":"A comment",
+	"samples":[
+		{
+		"name":"CD0001",
+		"meancov": 10
+		},
+		{
+		"name":"CD0002",
+		"meancov": 20.0
+		}
+		,
+		{
+		"name":"CD0003",
+		"meancov": 30.0
+		}
+		]
+	}],
+"samples":[	
+	{ "name":"CD0001" },
+	{ "name":"CD0002" },
+	{ "name":"CD0003" },	
+	{ "name":"CD0004" },	
+	{ "name":"CD0005" },	
+	{ "name":"CD0006" },	
+	{ "name":"CD0007" },	
+	{ "name":"CD0008" }
+	]
+
+}

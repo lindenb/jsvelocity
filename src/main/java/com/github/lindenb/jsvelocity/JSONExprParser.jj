@@ -23,6 +23,7 @@ PARSER_BEGIN(JSONExprParser)
 
 package com.github.lindenb.jsvelocity.json.expr;
 import com.github.lindenb.jsvelocity.json.*;
+import com.github.lindenb.jsvelocity.json.expr.*;
 import java.util.*;
 import java.io.*;
 import java.math.*;
@@ -171,16 +172,16 @@ private ExprNode relative():
 private ExprNode pathitem():{int index;Token t; ExprNode ret=null;}
 	{ 
 	( t=<IDENTIFIER> {SearchObjectFieldNode n=new SearchObjectFieldNode(); n.key=t.image; ret=n; }
-	| <ARRAY_OPEN> index=integer() <ARRAY_CLOSE>  {SearchArrayNode n2=new SearchArrayNode(); n2.index=index;  ret=n; }
+	| <ARRAY_OPEN> index=integer() <ARRAY_CLOSE>  {SearchArrayNode n2=new SearchArrayNode(); n2.index=index;  ret=n2; }
 	) (having())?
 		{
 		return ret;
 		}
 	}
 
-public 	ExprNode having():{}
+private ExprNode having():{}
 	{
-	<IDENTIFIER> <EQ> <IDENTIFIER>
+	<IDENTIFIER> <EQ> <IDENTIFIER> { return null;}
 	}
 	
 	

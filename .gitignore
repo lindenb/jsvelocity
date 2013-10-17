@@ -3,3 +3,6 @@ src/main/generated-sources
 build.properties
 *.class
 dist
+.classpath
+.project
+bin

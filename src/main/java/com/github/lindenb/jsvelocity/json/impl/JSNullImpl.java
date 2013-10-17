@@ -7,6 +7,8 @@ public class JSNullImpl
 	implements JSNull
 
 	{
+	public static final JSNull NIL=new JSNullImpl();
+	
 	@Override
 	public final Object getValue()
 		{

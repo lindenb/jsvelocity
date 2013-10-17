@@ -1,0 +1,153 @@
+#macro(anchorShow $table $name)<a href="/${table}/${name}">${name}</a>#end
+#macro(anchorSequencer $name)#anchorShow("sequencer",${name})#end
+#macro(anchorRun $name)#anchorShow("run",${name})#end
+#macro(anchorSample $name)#anchorShow("sample",${name})#end
+<html>
+<body>
+${response.setContentType("text/html;charset=utf-8")}
+
+#if(${request.pathInfo.equals("/sequencers")})
+<table>
+ <caption>Sequencers</caption>
+ <tr><th>Name</th><th>Runs</th></tr>
+#foreach($sequencer in ${lims.sequencer})
+<tr>
+  <td>#anchorSequencer(${sequencer.name})</td>
+  <td>
+  #foreach($run in ${lims.run})
+    #if(${run.sequencer} == ${sequencer.name} )
+     <span>#anchorRun(${run.name}) </span>
+    #end
+  #end
+  </td>
+</tr>
+#end
+</table>
+#elseif(${request.pathInfo.equals("/runs")})
+
+<table>
+ <caption>Runs</caption>
+ <tr><th>Name</th><th>Sequencer</th><th>Date</th></tr>
+#foreach($run in ${lims.run})
+<tr>
+  <td>#anchorRun(${run.name})</td>
+  <td>#anchorSequencer(${run.sequencer})</td>
+  <td>${run.date}</td>
+</tr>
+#end
+</table>
+
+#elseif(${request.pathInfo.equals("/samples")})
+
+<table>
+ <caption>Samples</caption>
+ <tr><th>Name</th></tr>
+#foreach($sample in ${lims.samples})
+<tr>
+  <td>#anchorSample(${sample.name})</td>
+</tr>
+#end
+</table>
+
+#elseif(${request.pathInfo.startsWith("/sequencer/")})
+#set($seqid = ${request.pathInfo.substring(11)})
+#foreach($sequencer in ${lims.sequencer})
+#if(${sequencer.name} == $seqid)
+<h1>${sequencer.name}</h1>
+<h2>Runs</h2>
+<table>
+<tr>
+  <th>Name</th>
+  <th>Date</th>
+  <th>Samples</th>
+</tr>
+#foreach($run in ${lims.run})
+#if("${run.sequencer}" == "${sequencer.name}" )
+<tr>
+  <td>#anchorRun(${run.name})</td>
+  <td>${run.date}</td>
+  <td>
+  #foreach($sample in ${run.samples})
+  <span>#anchorSample(${sample.name}) </span>
+  #end
+  </td>
+</tr>
+#end
+#end
+</table>
+#end
+#end
+
+#elseif(${request.pathInfo.startsWith("/sample/")})
+#set($sampleid = ${request.pathInfo.substring(8)})
+
+#foreach($sample in ${lims.samples})
+#if(${sample.name} == $sampleid)
+<h1>${sample.name}</h1>
+<h2>Runs</h2>
+<table>
+<tr>
+  <th>Name</th>
+  <th>Date</th>
+  <th>Sequencer</th>
+  <th>Mean Cov</th>
+</tr>
+#foreach($run in ${lims.run})
+#foreach($indi in ${run.samples}) 
+#if("${indi.name}" == "${sample.name}" )
+<tr>
+  <td>#anchorRun(${run.name})</td>
+  <td>${run.date}</td>
+  <td>#anchorSequencer(${run.sequencer})</td>
+  <td>${indi.meancov}</td>
+</tr>
+#end
+#end
+#end
+</table>
+#end
+#end
+
+
+
+#elseif(${request.pathInfo.startsWith("/run/")})
+#set($runid = ${request.pathInfo.substring(5)})
+
+
+#foreach($run in ${lims.run})
+#if(${run.name} == $runid)
+<h1>${run.name}</h1>
+<dl>
+  <dt>FlowCell</dt><dd>${run.flowcell}</dd>
+</dl>
+
+<h2>Samples</h2>
+<table>
+<tr>
+  <th>Name</th><th>MeanCov</th>
+</tr>
+#foreach($indi in ${run.samples}) 
+<tr>
+  <td>#anchorSample(${indi.name})</td>
+  <td>${indi.meancov}</td>
+</tr>
+
+#end
+</table>
+#end
+#end
+
+
+
+
+#else
+<ul>
+  <li><a href="/sequencers">Sequencers</a></li>
+  <li><a href="/runs">Runs</a></li>
+  <li><a href="/samples">Samples</a></li>
+</ul>
+#end
+<hr/>
+<a href="/">Home</a>
+</body>
+</html>

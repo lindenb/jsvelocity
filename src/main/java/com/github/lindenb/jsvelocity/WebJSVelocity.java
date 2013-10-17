@@ -20,27 +20,63 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import com.github.lindenb.jsvelocity.json.JSNode;
+
 
 public class WebJSVelocity extends AbstractHandler
 	{
 	private File templateFile=null;
 	private Map<String,Object> context=new HashMap<String, Object>();
 	
+	private static class DynamicJsonLoading
+		{
+		private File f;
+		DynamicJsonLoading(File f)
+			{
+			this.f=f;
+			}
+		public JSNode get() throws IOException
+			{
+			FileReader in=null;
+			try {
+				in=new FileReader(f);
+				JSONParser p=new JSONParser(in);
+				return p.parse();
+			} catch (Exception e) {
+				throw new IOException(e);
+				}
+			finally
+				{
+				if(in!=null) in.close();
+				}
+			}
+		}
+	
 	@Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+    public void handle(String target,
+    			Request baseRequest,
+    			HttpServletRequest request,
+    			HttpServletResponse response
+    			) throws IOException, ServletException
     	{
     	PrintWriter w=response.getWriter();
     	VelocityContext ctx=new VelocityContext();
 
     	for(String k:context.keySet())
     		{
-    		ctx.put(k, context.get(k));
+    		Object v= context.get(k);
+    		if(v instanceof DynamicJsonLoading)
+    			{
+    			v=((DynamicJsonLoading)v).get();
+    			}
+    		ctx.put(k, v);
     		}
     	
 		ctx.put("now",new java.sql.Timestamp(System.currentTimeMillis()));
 		ctx.put("tool",new Tools());
 		ctx.put("request",request);
 		ctx.put("response",response);
+		ctx.put("baseRequest",baseRequest);
         
 		VelocityEngine ve = new VelocityEngine();
 		ve.setProperty("resource.loader", "file");
@@ -71,6 +107,7 @@ public class WebJSVelocity extends AbstractHandler
 		System.err.println(" -s (key) (string) add this string into the context.");
 		System.err.println(" -e (key) (json-expr) add this json into the context.");
 		System.err.println(" -f (key) (json-file) add this json into the context.");
+		System.err.println(" -F (key) (json-file) add this json into the context. Dynamic Loading: the file is reloaded for each request.");
 		System.err.println(" -i (key) and read stdin-json to the context.");
 		System.err.println(" -P (port) listen port.");
 		}
@@ -142,6 +179,12 @@ public class WebJSVelocity extends AbstractHandler
 			Object value=new JSONParser(r).parse();
 			this.context.put(key,value);
 			r.close();
+			}
+		else if(args[optind].equals("-F") && optind+2< args.length)
+			{
+			String key=args[++optind];
+			File r=new File(args[++optind]);
+			this.context.put(key,new DynamicJsonLoading(r));
 			}
         else if(args[optind].equals("--"))
                 {
