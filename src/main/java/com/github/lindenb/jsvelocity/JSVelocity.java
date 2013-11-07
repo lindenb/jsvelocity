@@ -13,6 +13,10 @@ import javax.xml.namespace.QName;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.resource.Resource;
+import org.apache.velocity.runtime.resource.loader.FileResourceLoader;
+import org.apache.velocity.runtime.resource.loader.ResourceLoader;
 
 import com.github.lindenb.jsvelocity.json.JSNode;
 
@@ -26,71 +30,76 @@ private static final Logger LOG=Logger.getLogger("JSVelocity");
 VelocityContext context=new VelocityContext();
 private File outDir=null;
 
+private AltFileResourceLoader altFileResourceLoader=new AltFileResourceLoader();
 
-public static abstract class MiniDom
+private class AltFileResourceLoader extends ResourceLoader
 	{
-	private DomElement parent=null;
-	public Map<QName,String> getAttributes()
+	ArrayList<File> alternatePaths=new ArrayList<File>();
+	public void init(org.apache.commons.collections.ExtendedProperties arg0)
+			{
+			
+			}
+	@Override
+	public InputStream getResourceStream(String rsrcName)
+			throws ResourceNotFoundException
 		{
-		return Collections.emptyMap();
+		File candidate=null;
+		for(File dir:alternatePaths)
+			{
+			if(dir.isDirectory())
+				{
+				candidate=new File(dir,rsrcName);
+				}
+			else if(dir.isFile() && dir.getName().equals(rsrcName))
+				{
+				candidate=dir;
+				}
+			
+			if(candidate!=null && 
+					candidate.exists() && 
+					candidate.isFile()
+					)
+				{
+				break;
+				}
+			candidate=null;
+			}
+		if(candidate==null)
+			{
+			candidate=new File(rsrcName);
+			}
+		
+		if(candidate.exists() && candidate.isFile()) 
+			{
+			LOG.info("opening "+candidate);
+			try
+				{
+				return new FileInputStream(candidate);
+				}
+			catch(IOException err)
+				{
+				throw new ResourceNotFoundException(err);
+				}
+			}
+		throw new ResourceNotFoundException(rsrcName);
 		}
-	public List<MiniDom> getChildren()
-		{
-		return Collections.emptyList();
-		}
-	public List<DomElement> getElements()
-		{
-		 List<DomElement> L=new ArrayList<JSVelocity.DomElement>();
-		 for(MiniDom E:getChildren())
-			 {
-			 if(E.isElement()) L.add((DomElement)E);
-			 }
-		 return L;
-		}
-	public boolean isElement() { return false;}
-	public boolean isText() { return false;}
-	public DomElement getParentNode() { return parent;}
-	}
 
-public static  class DomElement extends MiniDom
-	{
-	private QName name;
-	private Map<QName,String> attrs=new HashMap<QName, String>();
-	private List<MiniDom> children=new ArrayList<JSVelocity.MiniDom>();
-	
+
+
 	@Override
-	public List<MiniDom> getChildren()
+	public long getLastModified(Resource arg0)
 		{
-		return children;
+		return System.currentTimeMillis();
 		}
-	
+
+
+
 	@Override
-	public Map<QName, String> getAttributes()
-		{
-		return attrs;
-		}
-	
-	@Override
-	public boolean isElement()
+	public boolean isSourceModified(Resource arg0)
 		{
 		return true;
 		}
-	}
-
-public static  class DomText extends MiniDom
-	{
-	private StringBuilder content=new StringBuilder();
 	
-	public String getTextContent()
-		{
-		return content.toString();
-		}
-	
-	@Override
-	public String toString()
-		{
-		return getTextContent();
-		}
 	}
 
 public static class Picture
@@ -200,6 +209,7 @@ private void usage()
 	{
 	System.out.println("JS Velocity. Pierre Lindenbaum PhD. 2013.");
 	System.out.println("Options:");
+	System.err.println(" -I (dir) add alternate research path for inclusions.");
 	System.err.println(" -C (key) (class.qualified.Name) add this Class into the context.");
 	System.err.println(" -c (key) (class.qualified.Name) add an instance of Class into the context.");
 	System.err.println(" -s (key) (string) add this string into the context.");
@@ -232,7 +242,10 @@ private void run(String args[]) throws Exception
 			{
 			outDir=new File(args[++optind]);
 			}
-
+        else if(args[optind].equals("-I") && optind+1< args.length)
+			{
+			this.altFileResourceLoader.alternatePaths.add(new File(args[++optind]));
+			}
 		else if(args[optind].equals("-i") && optind+1< args.length)
 			{
 			readstdin=args[++optind];
@@ -320,9 +333,22 @@ private void run(String args[]) throws Exception
 	File file=new File(args[optind++]);
 	LOG.info("Reading VELOCITY template from file "+file);
 	VelocityEngine ve = new VelocityEngine();
-	ve.setProperty("resource.loader", "file");
-	ve.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-	if(file.getParent()!=null) ve.setProperty("file.resource.loader.path",file.getParent());
+	
+	//http://velocity.10973.n7.nabble.com/Setting-a-custom-resource-loader-td15045.html
+	ve.setProperty("resource.loader", "mine");
+	ve.setProperty(
+			"mine.resource.loader.instance",//.class
+			this.altFileResourceLoader
+			//"org.apache.velocity.runtime.resource.loader.FileResourceLoader"
+			);
+	if(file.getParentFile()!=null)
+		{
+		this.altFileResourceLoader.alternatePaths.add(
+				0,file.getParentFile()
+				);
+		//ve.setProperty("file.resource.loader.path",);
+		}
+	
 	ve.init();
 	Template template = ve.getTemplate(file.getName());
 	template.merge( this.context, out);

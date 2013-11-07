@@ -15,6 +15,7 @@
            fork="true"
            failonerror="true"
            >
+           	<arg value="-I"/> <arg value="./src/test/resources/velocity/alt1"/>
            	<arg value="-f"/> <arg value="all"/> <arg value="./src/test/resources/json/test.json"/>
            	<arg value="-C"/> <arg value="STRING"/> <arg value="java.lang.String"/>
            	 <arg value="./src/test/resources/velocity/test.vm"/>
@@ -28,6 +29,7 @@
            fork="true"
            failonerror="true"
            >
+
            	<arg value="-f"/> <arg value="all"/> <arg value="./src/test/resources/json/test.json"/>
            	<arg value="-C"/> <arg value="STRING"/> <arg value="java.lang.String"/>
            	 <arg value="./src/test/resources/velocity/web.vm"/>
@@ -45,6 +47,7 @@
 		destdir="tmp" debug="true" includeantruntime="no">
 		<classpath refid="lib.path.id"/>
 		<include name="**/WebJSVelocity.java" />
+		<include name="**/TokenMgrError.java" />
 	</javac>
 	<pathconvert property="jsvelocity.claspath2" pathsep=" ">
 		<path refid="lib.path.id" />
@@ -69,6 +72,7 @@
 		destdir="tmp" debug="true" includeantruntime="no">
 		<classpath refid="lib.path.id"/>
 		<include name="**/JSVelocity.java" />
+		<include name="**/TokenMgrError.java" />
 	</javac>
 	<pathconvert property="jsvelocity.claspath" pathsep=" ">
 		<path refid="lib.path.id" />

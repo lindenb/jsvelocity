@@ -12,6 +12,9 @@ Age:${indi.age}<br/>${indi.duck}
 </ul>
 <p>${tool.escapeXml("<>&")}</p>
 ${out.open("/tmp/file.txt")}Hello${out.close()}
+<div>
+#parse( "alt.vm" )
+</div>
 </body>
 </html>
 

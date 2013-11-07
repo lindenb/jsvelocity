@@ -30,6 +30,7 @@ java -jar jsvelocity.jar (options) template.vm
 
 Options
 -------
+* -I (dir) add an alternate path to search for resources.
 * -s (key) (string) add this string into the context.
 * -e (key) (json-expr) add this json into the context.
 * -f (key) (json-file) add this json into the context.
