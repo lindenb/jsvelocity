@@ -34,83 +34,7 @@ public class JSVelocity
 	VelocityContext context=new VelocityContext();
 	private File outDir=null;
 	
-	private AltFileResourceLoader altFileResourceLoader=new AltFileResourceLoader();
 	
-	private class AltFileResourceLoader extends ResourceLoader
-		{
-		ArrayList<File> alternatePaths=new ArrayList<File>();
-		public void init(org.apache.commons.collections.ExtendedProperties arg0)
-				{
-				
-				}
-		@Override
-		public InputStream getResourceStream(String rsrcName)
-				throws ResourceNotFoundException
-			{
-			File candidate=null;
-			for(File dir:alternatePaths)
-				{
-				if(dir.isDirectory())
-					{
-					candidate=new File(dir,rsrcName);
-					}
-				else if(dir.isFile() && dir.getName().equals(rsrcName))
-					{
-					candidate=dir;
-					}
-				
-				if(candidate!=null && 
-						candidate.exists() && 
-						candidate.isFile()
-						)
-					{
-					break;
-					}
-				candidate=null;
-				}
-			if(candidate==null)
-				{
-				candidate=new File(rsrcName);
-				}
-			
-			if(candidate.exists() && candidate.isFile()) 
-				{
-				LOG.info("opening "+candidate);
-				File parentFile=candidate.getParentFile();
-				if(parentFile!=null && !alternatePaths.contains(parentFile))
-					{
-					alternatePaths.add(parentFile);
-					}
-				
-				try
-					{
-					return new FileInputStream(candidate);
-					}
-				catch(IOException err)
-					{
-					throw new ResourceNotFoundException(err);
-					}
-				}
-			throw new ResourceNotFoundException(rsrcName);
-			}
-	
-	
-	
-		@Override
-		public long getLastModified(Resource arg0)
-			{
-			return System.currentTimeMillis();
-			}
-	
-	
-	
-		@Override
-		public boolean isSourceModified(Resource arg0)
-			{
-			return true;
-			}
-		
-		}
 	
 	public static class Picture
 		{
@@ -217,9 +141,8 @@ public class JSVelocity
 	
 	private void usage()
 		{
-		System.out.println("JS Velocity. Pierre Lindenbaum PhD. 2013.");
+		System.out.println("JS Velocity. Pierre Lindenbaum PhD. 2014.");
 		System.out.println("Options:");
-		System.err.println(" -I (dir) add alternate research path for inclusions.");
 		System.err.println(" -C (key) (class.qualified.Name) add this Class into the context.");
 		System.err.println(" -c (key) (class.qualified.Name) add an instance of Class into the context.");
 		System.err.println(" -s (key) (string) add this string into the context.");
@@ -252,10 +175,7 @@ public class JSVelocity
 				{
 				outDir=new File(args[++optind]);
 				}
-	        else if(args[optind].equals("-I") && optind+1< args.length)
-				{
-				this.altFileResourceLoader.alternatePaths.add(new File(args[++optind]));
-				}
+	      
 			else if(args[optind].equals("-i") && optind+1< args.length)
 				{
 				readstdin=args[++optind];
@@ -345,6 +265,7 @@ public class JSVelocity
 		VelocityEngine ve = new VelocityEngine();
 		
 		//http://velocity.10973.n7.nabble.com/Setting-a-custom-resource-loader-td15045.html
+		/*
 		ve.setProperty("resource.loader", "mine");
 		ve.setProperty(
 				"mine.resource.loader.instance",//.class
@@ -357,7 +278,10 @@ public class JSVelocity
 					0,file.getParentFile()
 					);
 			//ve.setProperty("file.resource.loader.path",);
-			}
+			}*/
+		ve.setProperty("resource.loader", "file");
+		ve.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
+		if(file.getParent()!=null) ve.setProperty("file.resource.loader.path",file.getParent());		
 		
 		ve.init();
 		Template template = ve.getTemplate(file.getName());
