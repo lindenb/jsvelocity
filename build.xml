@@ -7,7 +7,7 @@
 
 
 
-<target name="all" depends="tests"></target>
+<target name="all" depends="jsvelocity"></target>
 
 <target name="tests" depends="jsvelocity,webjsvelocity">
 	<mkdir dir="tmp"/>
@@ -54,7 +54,7 @@
 	<jar destfile="dist/webjsvelocity.jar" basedir="tmp">
 		<manifest>
 			<attribute name="Built-By" value="${user.name}"/>
-			<attribute name="Main-Class" value=" com.github.lindenb.jsvelocity.WebJSVelocity"/>
+			<attribute name="Main-Class" value="com.github.lindenb.jsvelocity.WebJSVelocity"/>
 		 	<attribute name="Class-Path" value="${jsvelocity.claspath2}" />
 		</manifest>
 	</jar>
