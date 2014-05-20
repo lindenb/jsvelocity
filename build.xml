@@ -79,7 +79,7 @@
 	<jar destfile="dist/jsvelocity.jar" basedir="tmp">
 		<manifest>
 			<attribute name="Built-By" value="${user.name}"/>
-			<attribute name="Main-Class" value=" com.github.lindenb.jsvelocity.JSVelocity"/>
+			<attribute name="Main-Class" value="com.github.lindenb.jsvelocity.JSVelocity"/>
 		 	<attribute name="Class-Path" value="${jsvelocity.claspath}" />
 		</manifest>
 	</jar>
