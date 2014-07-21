@@ -1,15 +1,8 @@
-${response.setContentType("text/html;charset=utf-8")}
 <html>
 <body>
-${request.pathInfo}
-#if(${request.pathInfo.equals("/individuals")})
 #foreach($indi in ${all.individuals})
 <h1>${indi['name']}</h1>
-<p>${indi.path}:${indi.id}</p>
 Age:${indi.age}<br/>${indi.duck}
-#end
-#else
-<a href="/individuals">Individuals</a>
 #end
 <h3>String Constructors</h3>
 <ul>
@@ -18,5 +11,9 @@ Age:${indi.age}<br/>${indi.duck}
 #end
 </ul>
 <p>${tool.escapeXml("<>&")}</p>
+${out.open("/tmp/file.txt")}
+Hello
+${out.close()}
 </body>
 </html>
+

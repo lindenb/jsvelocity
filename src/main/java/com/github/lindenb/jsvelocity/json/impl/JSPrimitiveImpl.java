@@ -29,8 +29,8 @@ public class JSPrimitiveImpl
 		return value instanceof BigInteger;
 		}
 
-	
-	public Object getValue()
+	@Override
+	public Object getNodeValue()
 		{
 		return value;
 		}

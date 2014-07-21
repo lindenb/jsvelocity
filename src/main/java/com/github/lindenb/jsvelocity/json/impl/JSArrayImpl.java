@@ -12,7 +12,7 @@ public class JSArrayImpl
 	public boolean isArray() { return true;}
 	
 	@Override
-	public Object getValue()
+	public Object getNodeValue()
 		{
 		return this.array;
 		}
@@ -51,7 +51,7 @@ public class JSArrayImpl
 	  public JSNode findById(String s)
 		  {
 		  if(s==null) return null;
-		  if(getId().equals(s)) return this;
+		  if(getNodeId().equals(s)) return this;
 		  for(JSNode c:this)
 			  {
 			  JSNode r=c.findById(s);

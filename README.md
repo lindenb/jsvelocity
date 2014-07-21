@@ -68,12 +68,12 @@ public interface JSNode
 	public boolean isComplex();
 	public boolean isBigDecimal();
 	public boolean isBigInteger();
-	public abstract Object getValue();
-	public String getId();
+	public abstract Object getNodeValue();
+	public String getNodeId();
 	public JSNode findById(String s);
 	public JSNode getParentNode();
-	public String getPath();
-	public JSNode getRoot();
+	public String getNodePath();
+	public JSNode getNodeRoot();
 	}
 
 public interface JSArray
@@ -199,61 +199,11 @@ Hello
 ```
 
 
-webjsvelocity
-=============
-Web version of jsvelocity based on <b>Jetty</b>
-
-
-Compilation
------------
-
-```bash
-$ ant webjsvelocity
-```
-
-
-Options
--------
-* -s (key) (string) add this string into the context.
-* -e (key) (json-expr) add this json into the context.
-* -f (key) (json-file) add this json into the context.
-* -F (key) (json-file) add this json into the context. Dynamic Loading: the JSON file is reloaded for each request
-* -i (key) and read stdin-json to the context.
-* -C (key) (class.qualified.Name) add this Class into the context.
-* -c (key) (class.qualified.Name) add an instance of Class into the context.
-* -P (port) listen port.
-
-Default objects
----------------
-* out : the http writer (default is stdout).
-* tool : utility containing the following method: escapeC(String), escapeXml(String), escapeHttp(String)
-* now: java.sql.Timestamp of the request
-* request: jetty current httpRequest
-* response: jetty current httpResponse
-* baseRequest :  current jetty Request
-
-
-Example:
+History:
 --------
 
-A test with :
-
-* JSON Data: https://github.com/lindenb/jsvelocity/blob/master/src/test/resources/json/lims.json 
-* Velocity Macros: https://github.com/lindenb/jsvelocity/blob/master/src/test/resources/velocity/lims.vm
-
-```bash
-java -jar dist/webjsvelocity.jar  \
-	-F lims src/test/resources/json/lims.json \
-	src/test/resources/velocity/lims.vm
-	
-2013-10-17 12:43:35.566:INFO:oejs.Server:main: jetty-9.1.0.M0
-2013-10-17 12:43:35.602:INFO:oejs.ServerConnector:main: Started ServerConnector@72dcb6{HTTP/1.1}{0.0.0.0:8080}
-(...)
-
-```
-
-
-<img src="http://i.imgur.com/Yx5yakC.jpg"/>
-
-
-
+* 2014-07 Removed WebJSvelocity
+* 2014-07  changed some signatures:
+  * getPath/getNodePath
+  * getValue/getNodeValue
+  * getParent/getParentNode

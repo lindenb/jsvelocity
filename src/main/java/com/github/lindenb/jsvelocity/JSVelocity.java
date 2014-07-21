@@ -1,31 +1,16 @@
 package com.github.lindenb.jsvelocity;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import java.io.*;
-import java.net.URL;
-
-import javax.xml.namespace.QName;
-
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.runtime.resource.Resource;
-import org.apache.velocity.runtime.resource.loader.FileResourceLoader;
-import org.apache.velocity.runtime.resource.loader.ResourceLoader;
-
-import com.github.lindenb.jsvelocity.json.JSNode;
 
 
 
 
 /**
  * JSVelocity
- * @author lindenb
+ * @author Pierre Lindenbaum
  *
  */
 public class JSVelocity

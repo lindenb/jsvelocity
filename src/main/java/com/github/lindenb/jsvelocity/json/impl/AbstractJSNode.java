@@ -58,7 +58,7 @@ public abstract class AbstractJSNode
 	@Override
 	public final boolean isComplex() { return isArray() || isObject();}
 	@Override
-	public abstract Object getValue();
+	public abstract Object getNodeValue();
 	
 	@Override
 	public boolean isBigDecimal() {
@@ -76,13 +76,13 @@ public abstract class AbstractJSNode
 		}
 
 	@Override
-	public final String getId()
+	public final String getNodeId()
 		{
 		return "id"+id();
 		}
 	
-	
-	public final String getPath()
+	@Override
+	public final String getNodePath()
 		{
 		JSNode p=getParentNode();
 		if(p==null) return "";
@@ -91,7 +91,7 @@ public abstract class AbstractJSNode
 			JSArray container=(JSArray)p;
 			for(int i=0;i<container.size();++i)
 				{
-				if(container.get(i)==this) return p.getPath()+"["+i+"]";
+				if(container.get(i)==this) return p.getNodePath()+"["+i+"]";
 				}
 			throw new IllegalStateException();
 			}
@@ -102,7 +102,7 @@ public abstract class AbstractJSNode
 				{
 				if(container.get(key)==this)
 					{
-					String pp=p.getPath();
+					String pp=p.getNodePath();
 					return (pp.isEmpty()?"":"/")+key;
 					}
 				}
@@ -132,7 +132,7 @@ public abstract class AbstractJSNode
 	
 	
 	@Override
-	public final JSNode getRoot()
+	public final JSNode getNodeRoot()
 		{
 		JSNode curr=this;
 		while(curr.getParentNode()!=null)
@@ -147,12 +147,12 @@ public abstract class AbstractJSNode
 	public JSNode findById(String s)
 		  {
 		  if(s==null) return null;
-		  if(getId().equals(s)) return this;
+		  if(getNodeId().equals(s)) return this;
 		  return null;
 		  }
 	@Override
 	public String toString()
 		{
-		return String.valueOf(getValue());
+		return String.valueOf(getNodeValue());
 		}
 	}

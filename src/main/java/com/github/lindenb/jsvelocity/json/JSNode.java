@@ -17,12 +17,12 @@ public interface JSNode
 	public boolean isComplex();
 	public boolean isBigDecimal();
 	public boolean isBigInteger();
-	public abstract Object getValue();
-	public String getId();
+	public abstract Object getNodeValue();
+	public String getNodeId();
 	public JSNode findById(String s);
 	public JSNode getParentNode();
 	public void setParentNode(JSNode p);
-	public String getPath();
+	public String getNodePath();
 	public List<JSNode> eval(String path);
-	public JSNode getRoot();
+	public JSNode getNodeRoot();
 	}

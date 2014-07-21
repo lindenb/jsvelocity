@@ -12,12 +12,15 @@ public class JSObjectImpl
 	@Override
 	public final boolean isObject() { return true;}
 
-	@Override public Object getValue()
+	
+	@Override
+	public Object getNodeValue()
 		{
 		return this.map;
 		}
+
 	
-	@Override  public  int size(){ return this.map.size();}
+	  @Override  public  int size(){ return this.map.size();}
 	  @Override public  boolean isEmpty(){ return this.map.isEmpty();}
 	  @Override  public  boolean containsKey(java.lang.Object o){ return this.map.containsKey(o);}
 	  @Override public  boolean containsValue(java.lang.Object o){ return this.map.containsValue(o);}
@@ -37,7 +40,7 @@ public class JSObjectImpl
 	  public JSNode findById(String s)
 		  {
 		  if(s==null) return null;
-		  if(getId().equals(s)) return this;
+		  if(getNodeId().equals(s)) return this;
 		  for(String k:this.keySet())
 			  {
 			  JSNode c=this.get(k);
@@ -46,5 +49,5 @@ public class JSObjectImpl
 			  }
 		  return null;
 		  }
-	  
+	
 	}

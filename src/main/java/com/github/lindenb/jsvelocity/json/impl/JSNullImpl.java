@@ -10,7 +10,7 @@ public class JSNullImpl
 	public static final JSNull NIL=new JSNullImpl();
 	
 	@Override
-	public final Object getValue()
+	public final Object getNodeValue()
 		{
 		return null;
 		}
