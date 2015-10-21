@@ -1,9 +1,22 @@
 package com.github.lindenb.jsvelocity;
-import java.util.logging.Logger;
-import java.io.*;
+
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.Writer;
+
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+
+import com.google.gson.JsonParser;
 
 
 
@@ -15,9 +28,10 @@ import org.apache.velocity.app.VelocityEngine;
  */
 public class JSVelocity
 	{
-	private static final Logger LOG=Logger.getLogger("JSVelocity");
+	private static final Log LOG=LogFactory.getLog(JSVelocity.class);
 	VelocityContext context=new VelocityContext();
 	private File outDir=null;
+	
 	
 	
 	
@@ -140,7 +154,7 @@ public class JSVelocity
 		LOG.info("adding key="+key+" as "+(o==null?"null object":o.getClass().getName()));
 		if(context.containsKey(key))
 			{
-			LOG.warning("Key="+key+" defined twice");
+			LOG.warn("Key="+key+" defined twice");
 			}
 		context.put(key,o);
 		}
@@ -202,14 +216,16 @@ public class JSVelocity
 			else if(args[optind].equals("-e") && optind+2< args.length)
 				{
 				String key=args[++optind];
-				Object value=new JSONParser(new StringReader(args[++optind])).parse();
+				final JsonParser jsonParser = new JsonParser();
+				Object value = jsonParser.parse(new StringReader(args[++optind]));
 				put(key,value);
 				}
 			else if(args[optind].equals("-f") && optind+2< args.length)
 				{
 				String key=args[++optind];
 				FileReader r=new FileReader(args[++optind]);
-				Object value=new JSONParser(r).parse();
+				final JsonParser jsonParser = new JsonParser();
+				Object value= jsonParser.parse(r);
 				put(key,value);
 				r.close();
 				}
@@ -232,7 +248,8 @@ public class JSVelocity
 		if(readstdin!=null)
 			{
 			LOG.info("Reading from stdin");
-			Object o=new JSONParser(new InputStreamReader(System.in)).parse();
+			final JsonParser jsonParser = new JsonParser();
+			Object o= jsonParser.parse(new InputStreamReader(System.in));
 			put(readstdin,o);
 			}
 		if(optind+1!=args.length)

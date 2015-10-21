@@ -5,12 +5,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import com.github.lindenb.jsvelocity.json.JSNode;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.google.gson.JsonParser;
 
 public class Tools
 	{
+	private static final Log LOG=LogFactory.getLog(Tools.class);
+
 	private InputStream openStream(Object o) throws Exception
 	{
+	LOG.info("open stream "+o);
 	if(o==null) return null;
 	String uri=o.toString().trim();
 	if(uri.isEmpty()) return null;
@@ -43,11 +49,12 @@ public String getContent(Object o) throws Exception
 	r.close();
 	return b.toString();
 	}
-public JSNode getJSon(Object o) throws Exception
+public Object getJSon(Object o) throws Exception
 	{
+	final JsonParser parser = new JsonParser();
 	InputStream in=openStream(o);
 	if(in==null) return null;
-	JSNode n=new JSONParser(in).parse();
+	Object n=parser.parse(new InputStreamReader(in));
 	in.close();
 	return n;
 	}
