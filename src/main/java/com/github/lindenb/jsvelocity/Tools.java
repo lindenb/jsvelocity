@@ -5,14 +5,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.gson.JsonParser;
 
 public class Tools
 	{
-	private static final Log LOG=LogFactory.getLog(Tools.class);
+	private static final Logger LOG=LogManager.getLogger(Tools.class);
 
 	private InputStream openStream(Object o) throws Exception
 	{
@@ -49,7 +49,7 @@ public String getContent(Object o) throws Exception
 	r.close();
 	return b.toString();
 	}
-public Object getJSon(Object o) throws Exception
+public Object getJSon(final Object o) throws Exception
 	{
 	final JsonParser parser = new JsonParser();
 	InputStream in=openStream(o);
@@ -59,12 +59,12 @@ public Object getJSon(Object o) throws Exception
 	return n;
 	}
 
-public String escapeTex(Object o)
+public String escapeTex(final Object o)
 	{
 	return escapeLaTex(o);
 	}
 
-public String escapeLaTex(Object o)
+public String escapeLaTex(final Object o)
 	{
 	if(o==null) return "";
 	String s=String.valueOf(o);
@@ -90,7 +90,7 @@ public String escapeLaTex(Object o)
 	return b.toString();
 	}
 
-public String escapeC(Object o)
+public String escapeC(final Object o)
 	{
 	if(o==null) return "";
 	String s=String.valueOf(o);
@@ -112,11 +112,11 @@ public String escapeC(Object o)
 	return b.toString();
 	}
 
-public String escapeXml(Object o)
+public String escapeXml(final Object o)
 	{
 	if(o==null) return "";
-	String s=String.valueOf(o);
-	StringBuilder b=new StringBuilder(s.length());
+	final String s=String.valueOf(o);
+	final StringBuilder b=new StringBuilder(s.length());
 	for(int i=0;i< s.length();++i)
 		{
 		char c=s.charAt(i);
@@ -133,7 +133,7 @@ public String escapeXml(Object o)
 	return b.toString();
 	}
 
-public String escapeHttp(Object o) throws Exception
+public String escapeHttp(final Object o) throws Exception
 	{
 	if(o==null) return "";
 	return java.net.URLEncoder.encode(o.toString(),"UTF-8");

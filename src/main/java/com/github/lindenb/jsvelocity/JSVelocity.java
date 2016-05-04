@@ -10,14 +10,14 @@ import java.io.StringReader;
 import java.io.Writer;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
-import com.google.gson.JsonParser;
-
+import com.github.lindenb.jsvelocity.json.JSUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 
@@ -28,7 +28,7 @@ import com.google.gson.JsonParser;
  */
 public class JSVelocity
 	{
-	private static final Log LOG=LogFactory.getLog(JSVelocity.class);
+	private static final Logger LOG=LogManager.getLogger(JSVelocity.class);
 	VelocityContext context=new VelocityContext();
 	private File outDir=null;
 	
@@ -140,7 +140,7 @@ public class JSVelocity
 	
 	private void usage()
 		{
-		System.out.println("JS Velocity. Pierre Lindenbaum PhD. 2014.");
+		System.out.println("JS Velocity. Pierre Lindenbaum PhD. 2016.");
 		System.out.println("Options:");
 		System.err.println(" -C (key) (class.qualified.Name) add this Class into the context.");
 		System.err.println(" -c (key) (class.qualified.Name) add an instance of Class into the context.");
@@ -149,7 +149,7 @@ public class JSVelocity
 		System.err.println(" -f (key) (json-file) add this json into the context.");
 		System.err.println(" -i (key) and read stdin-json to the context.");
 		}
-	private void put(String key,Object o)
+	private void put(final String key,final Object o)
 		{
 		LOG.info("adding key="+key+" as "+(o==null?"null object":o.getClass().getName()));
 		if(context.containsKey(key))
@@ -159,27 +159,26 @@ public class JSVelocity
 		context.put(key,o);
 		}
 	private void run(String args[]) throws Exception
-	        {
-	        
-	       String readstdin=null;
+	       { 
+	        String readstdin=null;
 	        int optind=0;
 	        while(optind< args.length)
 	                {
-	                if(args[optind].equals("-h"))
-	                        {
-				usage();
-	                        return;
-	                        }
+	                if(args[optind].equals("-h") || args[optind].equals("--help"))
+                        {
+						usage();
+                        return;
+                        }
 	                else if(args[optind].equals("-o") && optind+1< args.length)
-				{
-				outDir=new File(args[++optind]);
-				}
-	      
+						{
+						outDir=new File(args[++optind]);
+						}
+				  
 			else if(args[optind].equals("-i") && optind+1< args.length)
 				{
 				readstdin=args[++optind];
 				}
-			else if(args[optind].equals("-C") && optind+2< args.length)
+			else if((args[optind].equals("-C") || args[optind].equals("--class")) && optind+2< args.length)
 				{
 				String key=args[++optind];
 				String className=args[++optind];
@@ -193,10 +192,10 @@ public class JSVelocity
 					System.exit(-1);
 					}
 				}
-			else if(args[optind].equals("-c") && optind+2< args.length)
+			else if((args[optind].equals("-c") || args[optind].equals("--instance")) && optind+2< args.length)
 				{
-				String key=args[++optind];
-				String className=args[++optind];
+				final String key=args[++optind];
+				final String className=args[++optind];
 				try
 					{
 					put(key,Class.forName(className).newInstance());
@@ -207,49 +206,46 @@ public class JSVelocity
 					System.exit(-1);
 					}
 				}
-			else if(args[optind].equals("-s") && optind+2< args.length)
+			else if((args[optind].equals("-s") || args[optind].equals("--string")) && optind+2< args.length)
 				{
-				String key=args[++optind];
-				String value=args[++optind];
+				final String key=args[++optind];
+				final String value=args[++optind];
 				put(key,value);
 				}
-			else if(args[optind].equals("-e") && optind+2< args.length)
+			else if((args[optind].equals("-e") || args[optind].equals("--jsonstring")) && optind+2< args.length)
 				{
-				String key=args[++optind];
-				final JsonParser jsonParser = new JsonParser();
-				Object value = jsonParser.parse(new StringReader(args[++optind]));
+				final String key=args[++optind];
+				final Object value = JSUtils.parse(new StringReader(args[++optind]));
 				put(key,value);
 				}
-			else if(args[optind].equals("-f") && optind+2< args.length)
+			else if((args[optind].equals("-f") || args[optind].equals("--json")) && optind+2< args.length)
 				{
-				String key=args[++optind];
-				FileReader r=new FileReader(args[++optind]);
-				final JsonParser jsonParser = new JsonParser();
-				Object value= jsonParser.parse(r);
+				final String key=args[++optind];
+				final FileReader r=new FileReader(args[++optind]);
+				final Object value= JSUtils.parse(r);
 				put(key,value);
 				r.close();
 				}
-	                else if(args[optind].equals("--"))
-	                        {
-	                        ++optind;
-	                        break;
-	                        }
-	                else if(args[optind].startsWith("-"))
-	                        {
-	                        System.err.println("Unknown option "+args[optind]);
-	                        System.exit(-1);
-	                        }
-	                else
-	                        {
-	                        break;
-	                        }
-	                ++optind;
-	                }
+            else if(args[optind].equals("--"))
+                {
+                ++optind;
+                break;
+                }
+            else if(args[optind].startsWith("-"))
+                {
+                System.err.println("Unknown option "+args[optind]);
+                System.exit(-1);
+                }
+            else
+                {
+                break;
+                }
+            ++optind;
+            }
 		if(readstdin!=null)
 			{
 			LOG.info("Reading from stdin");
-			final JsonParser jsonParser = new JsonParser();
-			Object o= jsonParser.parse(new InputStreamReader(System.in));
+			Object o= JSUtils.parse(System.in);
 			put(readstdin,o);
 			}
 		if(optind+1!=args.length)
@@ -286,7 +282,7 @@ public class JSVelocity
 		if(file.getParent()!=null) ve.setProperty("file.resource.loader.path",file.getParent());		
 		
 		ve.init();
-		Template template = ve.getTemplate(file.getName());
+		final Template template = ve.getTemplate(file.getName());
 		template.merge( this.context, out);
 		out.close();
 	    }
