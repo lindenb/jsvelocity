@@ -28,6 +28,10 @@ public class JSMap extends AbstractMap<String,JSNode>
 						))				
 				;
 		}
+	
+	@Override
+	public final boolean isObject() { return true;}
+	
 	@Override
 	public Object getNodeValue() {
 		return this.map;

@@ -19,6 +19,10 @@ public class JSArray extends AbstractList<JSNode>
 				Collectors.toList()
 				);
 		}
+	
+	@Override
+	public final boolean isArray() { return true;}
+	
 	@Override
 	public Object getNodeValue() {
 		return array;
