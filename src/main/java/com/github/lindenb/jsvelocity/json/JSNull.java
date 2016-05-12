@@ -7,6 +7,10 @@ public class JSNull  implements JSNode{
 	JSNull(final JSNode parent) {
 		this.parent = parent;
 		}
+	
+	@Override
+	public final boolean isNull() { return true;}
+	
 	@Override
 	public Object getNodeValue() {
 		return null;

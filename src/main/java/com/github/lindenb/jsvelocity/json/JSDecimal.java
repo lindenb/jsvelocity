@@ -14,6 +14,9 @@ public class JSDecimal  implements JSNode {
 		this.value=value;
 		}
 	@Override
+	public final boolean isBigDecimal() { return true;}
+	
+	@Override
 	public Object getNodeValue() {
 		return value;
 	}

@@ -33,6 +33,10 @@ public class JSString  implements JSNode,CharSequence {
 		this.parent = parent;
 		this.value =s;
 		}
+
+	@Override
+	public final boolean isString() { return true;}
+
 	@Override
 	public Object getNodeValue() {
 		return value;
