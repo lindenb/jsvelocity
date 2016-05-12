@@ -1,0 +1,6 @@
+Object: ${m}
+Object: is string : ${m.isString()}
+Object: is object : ${m.isObject()}
+#foreach($c in ${m.elements()}) 
+kv:$c kvz:${c.index} first:${c.first} last:${c.last} key:${c.key} value:${c.value}
+#end

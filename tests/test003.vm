@@ -1,0 +1,10 @@
+BigInt: ${value}
+BigInt: nodeId ${value.getNodeId()}
+BigInt: isPrimitive  ${value.isPrimitive()}
+BigInt: isBigInteger  ${value.isBigInteger()}
+BigInt: isBigDecimal  ${value.isBigDecimal()}
+#if( ${value.isInt()} ) 
+BigInt: intValue  ${value.intValue()}
+#else
+BigInt: not an int
+#end

@@ -68,9 +68,18 @@ $(1)  : ${htsjdk.jars} \
 
 endef
 
-.PHONY: all
+.PHONY: all jsvelocity test
 
-all: jsvelocity
+all: test jsvelocity
+
+test: jsvelocity
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -h
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar tests/test001.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e str '"ATAatagtagta\"_"' tests/test002.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '1989128349182798723982792378912873' tests/test003.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e m '{"a":1,"b":null,"c":"abcd","d":[],"e":{},"d":true}' tests/test004.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e a '["a",1,"b",null,"c","abcd","d",[],"e",{},"d",true]' tests/test005.vm
+	
 
 $(eval $(call compile-cmd,jsvelocity,com.github.lindenb.jsvelocity.JSVelocity,))
 

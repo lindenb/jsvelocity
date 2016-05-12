@@ -1,6 +1,28 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2016 Pierre Lindenbaum
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
 package com.github.lindenb.jsvelocity;
-
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,13 +30,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.Writer;
-
-
-
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-
 import com.github.lindenb.jsvelocity.json.JSUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -159,36 +177,35 @@ public class JSVelocity
 		context.put(key,o);
 		}
 	private void run(String args[]) throws Exception
-	       { 
-	        String readstdin=null;
-	        int optind=0;
-	        while(optind< args.length)
-	                {
-	                if(args[optind].equals("-h") || args[optind].equals("--help"))
-                        {
-						usage();
-                        return;
-                        }
-	                else if(args[optind].equals("-o") && optind+1< args.length)
-						{
-						outDir=new File(args[++optind]);
-						}
-				  
+		   { 
+		    String readstdin=null;
+		    int optind=0;
+		    while(optind< args.length)
+		        {
+		        if(args[optind].equals("-h") || args[optind].equals("--help"))
+		            {
+					usage();
+		            return;
+		            }
+		        else if(args[optind].equals("-o") && optind+1< args.length)
+					{
+					outDir=new File(args[++optind]);
+					}
 			else if(args[optind].equals("-i") && optind+1< args.length)
 				{
 				readstdin=args[++optind];
 				}
 			else if((args[optind].equals("-C") || args[optind].equals("--class")) && optind+2< args.length)
 				{
-				String key=args[++optind];
-				String className=args[++optind];
+				final String key=args[++optind];
+				final String className=args[++optind];
 				try
 					{
 					put(key,Class.forName(className));
 					}
 				catch(Exception err)
 					{
-					System.err.println("Cannot load class "+className);
+					LOG.error("Cannot load class "+className);
 					System.exit(-1);
 					}
 				}
@@ -233,7 +250,7 @@ public class JSVelocity
                 }
             else if(args[optind].startsWith("-"))
                 {
-                System.err.println("Unknown option "+args[optind]);
+                LOG.error("Unknown option "+args[optind]);
                 System.exit(-1);
                 }
             else
@@ -250,37 +267,24 @@ public class JSVelocity
 			}
 		if(optind+1!=args.length)
 			{
-			System.err.println("Illegal number of arguments. Expected one Velocity Template.\n");
-			return;
+			LOG.error("Illegal number of arguments. Expected one Velocity Template.\n");
+			System.exit(-1);
 			}
 		
-		MultiWriter out=new MultiWriter();
+		final MultiWriter out=new MultiWriter();
 		put("out",out);
 		put("tool",new Tools());
 		put("now",new java.sql.Timestamp(System.currentTimeMillis()));
-		File file=new File(args[optind++]);
+		final File file =new File(args[optind++]);
 		LOG.info("Reading VELOCITY template from file "+file);
-		VelocityEngine ve = new VelocityEngine();
-		
-		//http://velocity.10973.n7.nabble.com/Setting-a-custom-resource-loader-td15045.html
-		/*
-		ve.setProperty("resource.loader", "mine");
-		ve.setProperty(
-				"mine.resource.loader.instance",//.class
-				this.altFileResourceLoader
-				//"org.apache.velocity.runtime.resource.loader.FileResourceLoader"
-				);
-		if(file.getParentFile()!=null)
-			{
-			this.altFileResourceLoader.alternatePaths.add(
-					0,file.getParentFile()
-					);
-			//ve.setProperty("file.resource.loader.path",);
-			}*/
+		final VelocityEngine ve = new VelocityEngine();
 		ve.setProperty("resource.loader", "file");
+		ve.setProperty("file.resource.loader.description", "Velocity File Resource Loader");
 		ve.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-		if(file.getParent()!=null) ve.setProperty("file.resource.loader.path",file.getParent());		
-		
+		if(file.getParent()!=null)
+			{	
+			ve.setProperty("file.resource.loader.path",file.getParent());		
+			}
 		ve.init();
 		final Template template = ve.getTemplate(file.getName());
 		template.merge( this.context, out);
@@ -288,9 +292,17 @@ public class JSVelocity
 	    }
 	
 	
-	public static void main(String args[]) throws Exception
+	public static void main(String args[])
 		{
-		new JSVelocity().run(args);
+		try {
+			new JSVelocity().run(args);
+			}
+		catch(Throwable err)
+			{
+			LOG.error(err);
+			err.printStackTrace();
+			System.exit(-1);
+			}
 		}
 	
 }
