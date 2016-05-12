@@ -36,5 +36,8 @@ public class JSDecimal  implements JSNode {
 		return str;
 		}
 	
-
+	
+	public final double doubleValue() {
+	return value.doubleValue();
+	}
 }

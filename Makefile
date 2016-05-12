@@ -10,7 +10,6 @@ ANT?=ant
 JAVAC?=javac
 JAVA?=java
 JAR?=jar
-XJC?=xjc
 
 
 lib.dir?=lib
@@ -47,7 +46,9 @@ test: jsvelocity
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '1989128349182798723982792378912873' tests/test003.vm
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e m '{"a":1,"b":null,"c":"abcd","d":[],"e":{},"d":true}' tests/test004.vm
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e a '["a",1,"b",null,"c","abcd","d",[],"e",{},"d",true]' tests/test005.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '1989128349182798723982792378912873E-1' tests/test003.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e T 'true' -e F 'false' tests/test006.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '198912834918279872398.0E100' tests/test007.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value 'null' tests/test008.vm
 	
 jsvelocity : ${dist.dir}/jsvelocity.jar
 
@@ -84,10 +85,7 @@ ${dist.dir}/jsvelocity.jar: \
 	chmod  ugo+rx ${dist.dir}/jsvelocity
 	#cleanup
 	rm -rf ${tmp.dir}
-	
 
-
-$(eval $(call compile-cmd,jsvelocity,com.github.lindenb.jsvelocity.JSVelocity,))
 
 ${all_maven_jars}  : 
 	mkdir -p $(dir $@) && wget -O "$@" "http://central.maven.org/maven2/$(patsubst ${lib.dir}/%,%,$@)"

@@ -72,6 +72,12 @@ public class JSInteger  implements JSNode {
 	public final int intValue() {
 	return value.intValueExact();
 	}
+	
+	public boolean isLong() {
+	try { value.longValueExact(); return true;}
+	catch(java.lang.ArithmeticException err) {return false;}
+	}
+	
 	public final long longValue() {
 	return value.longValueExact();
 	}
