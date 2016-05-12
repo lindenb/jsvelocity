@@ -34,21 +34,59 @@ public interface JSNode {
 	    public default boolean isTrue() { return false;}
 	    public default boolean isFalse() { return false;}
 	    public default boolean isDecimal() { return false;}
-	    public default boolean isInteger() { return false;}
 	    public default boolean isComplex() { return isArray() || isObject();}
-	    public default boolean isPrimitive() { return !isComplex();}
 	    public default boolean isBigDecimal() { return false;}
 	    public default boolean isBigInteger()  { return false;}
 	    public default Object getNodeValue(){ return null;}
 	    public default String getNodeId(){ return null;}
 	    public default JSNode findById(final String s) { return null;}
 	    public default JSNode getParentNode() { return null;}
-	    public default String getNodePath() { return null;
+	    
+	    public default Integer getIndexInParentNode() { 
+	     	final JSNode p=getParentNode();
+	     	if(p==null) return null;
+	     	if(p.isArray()) {
+	     		final JSArray a = (JSArray)p;
+	     		for(int i=0;i< a.size();++i) if(a.get(i)==this) return i;
+	     		}
+	     	else if(p.isObject()) {
+	     		final JSMap o = (JSMap)p;
+	     		int i=0;
+	     		for(final String k: o.keySet()) {
+	     			if(o.get(k)==this) return i;
+	     			i++;
+	     			}
+	     		}	
+	     	return null;
+	     	}
+	     
+	    public default String getKeyFromParentNode() { 
+	     	final JSNode p=getParentNode();
+	     	if(p!=null && p.isObject()) {
+	     		final JSMap o = (JSMap)p;
+	     		for(final String k: o.keySet()) {
+	     			if(o.get(k)==this) return k;
+	     			}
+	     		}	
+	     	return null;
+	     	}
+	    
+	    public default String getNodePath() {
 	    	final StringBuilder sb = new StringBuilder();
-	    	JSNode curr = this;
-	    	while(curr!=null) {
-	    		curr=curr.gerPatentNode();
+	    	JSNode curr= this;
+	    	for(;;) {
+	    		final JSNode parent = curr.getParentNode();
+	    		
+	    		if(parent!=null && parent.isObject()) {
+			 		sb.insert(0,curr.getKeyFromParentNode());
+			 		}	
+			 	else if(parent!=null && parent.isArray()) {
+			 		sb.insert(0,"["+curr.getIndexInParentNode()+"]");
+			 		}		
+			 	if(parent==null) break;
+			 	curr= parent;
 	    		}
+	    	
 	    	return sb.toString();
 	    	}
 	    public default JSNode getNodeRoot() {

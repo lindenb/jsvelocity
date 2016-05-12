@@ -34,14 +34,6 @@ public class JSBoolean  implements JSNode {
 		this.value =b;
 		}
 	
-	@Override	
-	public final boolean isBoolean() { return true;}
-	@Override	
-	public final boolean isTrue() { return value;}
-	@Override	
-	public final boolean isFalse() { return !value;}
-	
-	
 	@Override
 	public Object getNodeValue() {
 		return value;

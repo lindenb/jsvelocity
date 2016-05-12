@@ -79,9 +79,6 @@ public class JSArray extends AbstractList<JSNode>
 	}
 
 
-	public final boolean isArray() { return true;}
-
-
 	public Iterable<Elt> elements() {
 		return new EltIterable();
 	}
@@ -122,8 +119,6 @@ public class JSArray extends AbstractList<JSNode>
 		@Override
 		public Elt next() { index++; return new Elt(index);}
 		}
-	
-
 }
 
 

@@ -84,12 +84,9 @@ public class JSMap extends AbstractMap<String,JSNode>
 	}
 	
 	@Override
-	public JSNode remove(Object key) {
+	public JSNode remove(final Object key) {
 		throw new UnsupportedOperationException("Cannot remove");
 	}
-	
-	@Override
-	public final boolean isObject() { return true;}
 	
 	@Override
 	public Set<java.util.Map.Entry<String, JSNode>> entrySet() {

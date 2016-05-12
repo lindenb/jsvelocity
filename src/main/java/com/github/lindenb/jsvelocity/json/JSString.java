@@ -33,7 +33,20 @@ public class JSString  implements JSNode,CharSequence {
 		this.parent = parent;
 		this.value =s;
 		}
-
+		
+	public String after(final String needle ) {
+		if(needle==null || needle.isEmpty()) return "";
+		final int index= this.value.indexOf(needle);
+		if(index==-1) return "";
+		return this.value.substring(index+needle.length());
+		}
+	public String before(final String needle ) {
+		if(needle==null || needle.isEmpty()) return "";
+		final int index= this.value.indexOf(needle);
+		if(index==-1) return "";
+		return this.value.substring(0,index);
+		}
+	
 	@Override
 	public final boolean isString() { return true;}
 
@@ -46,9 +59,6 @@ public class JSString  implements JSNode,CharSequence {
 	public String getNodeId() {
 		return id;
 	}
-
-	@Override
-	public final boolean isString() { return true;}
 
 	@Override
 	public JSNode getParentNode() {

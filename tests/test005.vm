@@ -3,5 +3,5 @@ Array: is string : ${a.isString()}
 Array: is object : ${a.isObject()}
 Array: is array : ${a.isArray()}
 #foreach($c in ${a.elements()}) 
-kv:$c kvz:${c.index} first:${c.first} last:${c.last} value:${c.value}
+kv:$c kvz:${c.index} first:${c.first} last:${c.last} value:${c.value} indexInParent:${c.value.getIndexInParentNode()}
 #end

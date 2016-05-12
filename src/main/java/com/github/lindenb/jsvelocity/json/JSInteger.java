@@ -39,9 +39,6 @@ public class JSInteger  implements JSNode {
 		}
 	
 	@Override
-	public final boolean isBigInteger() { return true;}
-	
-	@Override
 	public Object getNodeValue() {
 		return value;
 	}

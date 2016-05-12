@@ -36,38 +36,6 @@ gson.jars  =  \
 
 all_maven_jars = $(sort  ${log4j.jars} ${commons.codec.jars} ${apache.velocity.jars}  ${gson.jars})
 
-define compile-cmd
-
-## 1 : target name
-## 2 : qualified main class name
-## 3 : other deps
-
-$(1)  : ${htsjdk.jars} \
-		$(addsuffix .java,$(addprefix ${src.dir}/,$(subst .,/,$(2)))) \
-		$(3) ${all_maven_jars}
-	mkdir -p ${tmp.dir}/META-INF ${generated.dir}/java/$(dir $(subst .,/,$(2))) ${dist.dir}
-	#compile
-	${JAVAC} -d ${tmp.dir} -g -classpath "$$(subst $$(SPACE),:,$$(filter %.jar,$$^))" -sourcepath ${src.dir}:${generated.dir}/java $$(filter %.java,$$^)
-	#create META-INF/MANIFEST.MF
-	echo "Manifest-Version: 1.0" > ${tmp.mft}
-	echo "Main-Class: $(2)" >> ${tmp.mft}
-	echo "Class-Path: $$(realpath $$(filter %.jar,$$^)) ${dist.dir}/$(1).jar" | fold -w 71 | awk '{printf("%s%s\n",(NR==1?"": " "),$$$$0);}' >>  ${tmp.mft}
-	echo -n "Git-Hash: " >> ${tmp.mft}
-	$$(if $$(realpath .git/refs/heads/master),cat $$(realpath .git/refs/heads/master), echo "undefined")  >> ${tmp.mft} 
-	echo -n "Compile-Date: " >> ${tmp.mft}
-	date +%Y-%m-%d:%H-%m-%S >> ${tmp.mft}
-	#create jar
-	${JAR} cfm ${dist.dir}/$(1).jar ${tmp.mft}  -C ${tmp.dir} .
-	#create bash executable
-	echo '#!/bin/bash' > ${dist.dir}/$(1)
-	echo '${JAVA} -Dfile.encoding=UTF8 -Xmx500m $(if ${http.proxy.host},-Dhtt.proxyHost=${http.proxy.host})  $(if ${http.proxy.port},-Dhtt.proxyPort=${http.proxy.por
-	t}) -cp "$$(subst $$(SPACE),:,$$(realpath $$(filter %.jar,$$^))):${dist.dir}/$(1).jar" $(2) $$$$*' >> ${dist.dir}/$(1)
-	chmod  ugo+rx ${dist.dir}/$(1)
-	#cleanup
-	rm -rf ${tmp.dir}
-
-endef
-
 .PHONY: all jsvelocity test
 
 all: test jsvelocity
@@ -79,7 +47,45 @@ test: jsvelocity
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '1989128349182798723982792378912873' tests/test003.vm
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e m '{"a":1,"b":null,"c":"abcd","d":[],"e":{},"d":true}' tests/test004.vm
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e a '["a",1,"b",null,"c","abcd","d",[],"e",{},"d",true]' tests/test005.vm
+	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '1989128349182798723982792378912873E-1' tests/test003.vm
 	
+jsvelocity : ${dist.dir}/jsvelocity.jar
+
+${dist.dir}/jsvelocity.jar: \
+		${src.dir}/com/github/lindenb/jsvelocity/JSVelocity.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSString.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSNode.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSDecimal.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSArray.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSInteger.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSNull.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSUtils.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSMap.java \
+		${src.dir}/com/github/lindenb/jsvelocity/json/JSBoolean.java \
+		${src.dir}/com/github/lindenb/jsvelocity/Tools.java \
+ 		${all_maven_jars}
+	mkdir -p ${tmp.dir}/META-INF ${dist.dir}
+	#expand
+	$(foreach J,$(filter %.jar,$^),unzip -o ${J} -d ${tmp.dir};)
+	#compile
+	${JAVAC} -d ${tmp.dir} -g -classpath "$(subst $(SPACE),:,$(filter %.jar,$^))" -sourcepath ${src.dir} $(filter %.java,$^)
+	#create META-INF/MANIFEST.MF
+	echo "Manifest-Version: 1.0" > ${tmp.mft}
+	echo "Main-Class: com.github.lindenb.jsvelocity.JSVelocity" >> ${tmp.mft}
+	echo -n "Git-Hash: " >> ${tmp.mft}
+	$(if $(realpath .git/refs/heads/master),cat $(realpath .git/refs/heads/master), echo "undefined")  >> ${tmp.mft}
+	echo -n "Compile-Date: " >> ${tmp.mft}
+	date +%Y-%m-%d:%H-%m-%S >> ${tmp.mft}
+	#create jar
+	${JAR} cfm $@ ${tmp.mft}  -C ${tmp.dir} .
+	#create bash executable
+	echo '#!/bin/bash' > ${dist.dir}/jsvelocity
+	echo '${JAVA} -Dfile.encoding=UTF8 -Xmx500m $(if ${http.proxy.host},-Dhtt.proxyHost=${http.proxy.host})  $(if ${http.proxy.port},-Dhtt.proxyPort=${http.proxy.port}) -cp "${dist.dir}/jsvelocity.jar" com.github.lindenb.jsvelocity.JSVelocity  $$*' >> ${dist.dir}/jsvelocity
+	chmod  ugo+rx ${dist.dir}/jsvelocity
+	#cleanup
+	rm -rf ${tmp.dir}
+	
+
 
 $(eval $(call compile-cmd,jsvelocity,com.github.lindenb.jsvelocity.JSVelocity,))
 
