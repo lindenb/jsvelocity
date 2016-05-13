@@ -1,6 +1,9 @@
 package com.github.lindenb.jsvelocity.json;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+
+import com.google.gson.stream.JsonWriter;
 
 
 public class JSDecimal  implements JSNode {
@@ -39,5 +42,10 @@ public class JSDecimal  implements JSNode {
 	
 	public final double doubleValue() {
 	return value.doubleValue();
+	}
+	
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+		writer.value(this.value);
 	}
 }

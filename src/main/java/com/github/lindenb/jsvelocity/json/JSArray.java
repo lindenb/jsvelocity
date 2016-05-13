@@ -24,6 +24,7 @@ SOFTWARE.
 */
 package com.github.lindenb.jsvelocity.json;
 
+import java.io.IOException;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.Iterator;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.google.gson.JsonArray;
+import com.google.gson.stream.JsonWriter;
 
 public class JSArray extends AbstractList<JSNode>
 	implements JSNode, List<JSNode>{
@@ -75,7 +77,7 @@ public class JSArray extends AbstractList<JSNode>
 
 	@Override
 	public String toString() {
-		return this.array.toString();
+		return toJson();
 	}
 
 
@@ -83,6 +85,16 @@ public class JSArray extends AbstractList<JSNode>
 		return new EltIterable();
 	}
 
+	
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+	writer.beginArray();
+	for(final JSNode n:this.array) {
+		n.write(writer);
+	}
+	writer.endArray();
+	}
+	
 
 	public class EltIterable implements Iterable<Elt>
 		{

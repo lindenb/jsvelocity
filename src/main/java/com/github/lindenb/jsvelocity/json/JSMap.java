@@ -24,19 +24,14 @@ SOFTWARE.
 */
 package com.github.lindenb.jsvelocity.json;
 
-import java.util.AbstractList;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.AbstractMap;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 
 public class JSMap extends AbstractMap<String,JSNode>
 	implements JSNode{
@@ -84,6 +79,11 @@ public class JSMap extends AbstractMap<String,JSNode>
 	}
 	
 	@Override
+	public String toString() {
+		return toJson();
+		}
+	
+	@Override
 	public JSNode remove(final Object key) {
 		throw new UnsupportedOperationException("Cannot remove");
 	}
@@ -102,7 +102,15 @@ public class JSMap extends AbstractMap<String,JSNode>
 		return L;
 	}
 
-
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+		writer.beginObject();
+		for(final String k:this.map.keySet()) {
+			writer.name(k);
+			this.map.get(k).write(writer);
+		}
+		writer.endObject();
+	}
 	
 	
 	public class KeyValue
@@ -120,7 +128,19 @@ public class JSMap extends AbstractMap<String,JSNode>
 		
 		@Override
 		public String toString() {
-			return "("+key+"="+value+")";
+			JsonWriter w;
+			final StringWriter sw=new StringWriter();
+			try {
+				w = new JsonWriter(sw);
+				w.beginObject();
+				w.name(this.key);
+				value.write(w);
+				w.endObject();
+				w.close();
+				return sw.toString();
+			} catch (final Exception e) {
+				throw new RuntimeException(e);
+			}
 			}
 		}
 

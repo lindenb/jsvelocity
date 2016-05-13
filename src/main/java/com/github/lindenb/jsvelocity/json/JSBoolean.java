@@ -24,6 +24,9 @@ SOFTWARE.
 */
 package com.github.lindenb.jsvelocity.json;
 
+import java.io.IOException;
+
+import com.google.gson.stream.JsonWriter;
 
 public class JSBoolean  implements JSNode {
 	private final JSNode parent;
@@ -56,9 +59,13 @@ public class JSBoolean  implements JSNode {
 		return this.parent;
 	}
 	
+	@Override
 	public String toString() {
 		return String.valueOf(this.value);
 		}
-
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+		writer.value(value);
+	}
 
 }

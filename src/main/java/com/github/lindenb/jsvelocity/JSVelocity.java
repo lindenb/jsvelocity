@@ -26,7 +26,6 @@ package com.github.lindenb.jsvelocity;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.Writer;
@@ -100,12 +99,12 @@ public class JSVelocity
 			}
 		
 		
-		public void open(String fName)throws IOException
+		public void open(final String fName)throws IOException
 			{
 			_open(fName,false);
 			}
 			
-		public void openIfMissing(String fName)throws IOException
+		public void openIfMissing(final String fName)throws IOException
 			{
 			_open(fName,true);
 			}
@@ -163,8 +162,8 @@ public class JSVelocity
 		System.err.println(" -C (key) (class.qualified.Name) add this Class into the context.");
 		System.err.println(" -c (key) (class.qualified.Name) add an instance of Class into the context.");
 		System.err.println(" -s (key) (string) add this string into the context.");
-		System.err.println(" -e (key) (json-expr) add this json into the context.");
-		System.err.println(" -f (key) (json-file) add this json into the context.");
+		System.err.println(" -e (key) (json-expr) add this json expression into the context.");
+		System.err.println(" -f (key) (json-file) add this json file into the context.");
 		System.err.println(" -i (key) and read stdin-json to the context.");
 		}
 	private void put(final String key,final Object o)

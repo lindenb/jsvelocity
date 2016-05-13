@@ -24,7 +24,10 @@ SOFTWARE.
 */
 package com.github.lindenb.jsvelocity.json;
 
+import java.io.IOException;
 import java.math.BigInteger;
+
+import com.google.gson.stream.JsonWriter;
 
 
 public class JSInteger  implements JSNode {
@@ -80,5 +83,10 @@ public class JSInteger  implements JSNode {
 	
 	public final long longValue() {
 	return value.longValueExact();
+	}
+	
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+		writer.value(this.value);
 	}
 }

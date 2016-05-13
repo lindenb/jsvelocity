@@ -24,6 +24,11 @@ SOFTWARE.
 */
 package com.github.lindenb.jsvelocity.json;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
+import com.google.gson.stream.JsonWriter;
+
 public interface JSNode {
 		public default boolean isArray() { return false;}
 	    public default boolean isObject() { return false;}
@@ -105,4 +110,21 @@ public interface JSNode {
 		public default boolean isPrimitive() {
 			return isString() || isNumber() || isBoolean();
 			}
+		
+		public void write(final  JsonWriter writer) throws IOException;
+		
+		public default String toJson() {
+			JsonWriter w;
+			final StringWriter sw=new StringWriter();
+			try {
+				w = new JsonWriter(sw);
+				this.write(w);
+				w.close();
+				return sw.toString();
+			} catch (final Exception e) {
+				throw new RuntimeException(e);
+			}
+			}
+		
+		
 		}

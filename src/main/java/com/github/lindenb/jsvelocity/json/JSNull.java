@@ -1,5 +1,8 @@
 package com.github.lindenb.jsvelocity.json;
 
+import java.io.IOException;
+
+import com.google.gson.stream.JsonWriter;
 
 public class JSNull  implements JSNode{
 	private final JSNode parent;
@@ -26,6 +29,12 @@ public class JSNull  implements JSNode{
 	public JSNode getParentNode() {
 		return this.parent;
 	}
+	
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+	writer.nullValue();
+	}
+	
 	
 	public String toString()
 		{

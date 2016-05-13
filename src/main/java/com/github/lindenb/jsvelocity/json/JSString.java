@@ -23,7 +23,10 @@ SOFTWARE.
 
 */
 package com.github.lindenb.jsvelocity.json;
+import java.io.IOException;
 import java.util.Iterator;
+
+import com.google.gson.stream.JsonWriter;
 
 public class JSString  implements JSNode,CharSequence {
 	private final JSNode parent;
@@ -97,6 +100,12 @@ public class JSString  implements JSNode,CharSequence {
 		return new CharIterable();
 	}
 
+	@Override
+	public void write(final JsonWriter writer) throws IOException {
+	writer.value(this.value);
+	}
+
+	
 
 	public class CharIterable implements Iterable<Char>
 		{
