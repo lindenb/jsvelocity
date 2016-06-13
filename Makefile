@@ -1,6 +1,13 @@
 SHELL=/bin/bash
 this.makefile=$(lastword $(MAKEFILE_LIST))
 this.dir=$(dir $(realpath ${this.makefile}))
+
+#need local settings ? create a file 'local.mk' in this directory
+ifneq ($(realpath local.mk),)
+include $(realpath local.mk)
+endif
+
+
 src.dir=${this.dir}src/main/java
 generated.dir=${this.dir}src/main/generated-sources
 tmp.dir=${this.dir}_tmp
@@ -77,6 +84,8 @@ ${dist.dir}/jsvelocity.jar: \
 	$(if $(realpath .git/refs/heads/master),cat $(realpath .git/refs/heads/master), echo "undefined")  >> ${tmp.mft}
 	echo -n "Compile-Date: " >> ${tmp.mft}
 	date +%Y-%m-%d:%H-%m-%S >> ${tmp.mft}
+	#create lgo4j config file
+	echo '<?xml version="1.0" encoding="UTF-8"?><Configuration status="WARN"><Appenders><Console name="Console" target="SYSTEM_OUT"><PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/></Console></Appenders><Loggers><Root level="error"><AppenderRef ref="Console"/></Root></Loggers></Configuration>' > ${tmp.dir}/log4j2.xml
 	#create jar
 	${JAR} cfm $@ ${tmp.mft}  -C ${tmp.dir} .
 	#create bash executable

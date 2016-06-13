@@ -50,8 +50,6 @@ public class JSVelocity
 	private File outDir=null;
 	
 	
-	
-	
 	public static class Picture
 		{
 		public String getBase64()
@@ -175,7 +173,7 @@ public class JSVelocity
 			}
 		context.put(key,o);
 		}
-	private void run(String args[]) throws Exception
+	private void run(final String args[]) throws Exception
 		   { 
 		    String readstdin=null;
 		    int optind=0;
@@ -287,6 +285,7 @@ public class JSVelocity
 		ve.init();
 		final Template template = ve.getTemplate(file.getName());
 		template.merge( this.context, out);
+		out.flush();
 		out.close();
 	    }
 	

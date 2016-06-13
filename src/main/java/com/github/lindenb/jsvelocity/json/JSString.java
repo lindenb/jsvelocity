@@ -50,6 +50,17 @@ public class JSString  implements JSNode,CharSequence {
 		return this.value.substring(0,index);
 		}
 	
+	public String getMd5()  throws java.security.NoSuchAlgorithmException
+		{
+        final java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+        byte[] array = md.digest(this.value.getBytes());
+        final StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < array.length; ++i) {
+          sb.append(Integer.toHexString((array[i] & 0xFF) | 0x100).substring(1,3));
+          }
+        return sb.toString();
+		}
+	
 	@Override
 	public final boolean isString() { return true;}
 
@@ -123,6 +134,9 @@ public class JSString  implements JSNode,CharSequence {
 		public int getIndex() { return index;}
 		public boolean isFirst() { return index==0;}
 		public boolean isLast() { return index+1>=JSString.this.length();}
+		public boolean isDigit() { return Character.isDigit(getCharacter());};
+		public boolean isletter() { return Character.isLetter(getCharacter());};
+		public boolean isWhitespace() { return Character.isWhitespace(getCharacter());};
 		
 		public Character getCharacter() {
 			return JSString.this.charAt(index);

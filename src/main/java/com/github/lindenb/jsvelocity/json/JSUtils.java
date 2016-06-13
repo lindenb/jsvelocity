@@ -28,14 +28,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 public class JSUtils{
-private static final Logger LOG=LogManager.getLogger(JSUtils.class);
+//private static final org.apache.logging.log4j.Logger LOG=org.apache.logging.log4j.LogManager.getLogger(JSUtils.class);
 
 private static long ID_GENERATOR=0;	
 	
