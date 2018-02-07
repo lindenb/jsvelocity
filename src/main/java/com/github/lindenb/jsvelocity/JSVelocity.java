@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2016 Pierre Lindenbaum
+Copyright (c) 2018 Pierre Lindenbaum
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,16 +23,40 @@ SOFTWARE.
 
 */
 package com.github.lindenb.jsvelocity;
+import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import com.github.lindenb.jsvelocity.json.JSUtils;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.stream.JsonReader;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,26 +70,9 @@ import org.apache.logging.log4j.Logger;
 public class JSVelocity
 	{
 	private static final Logger LOG=LogManager.getLogger(JSVelocity.class);
-	VelocityContext context=new VelocityContext();
-	private File outDir=null;
+	private VelocityContext context=new VelocityContext();
 	
 	
-	public static class Picture
-		{
-		public String getBase64()
-			{
-			return "";
-			}
-		
-		public int getWidth()
-			{
-			return 1;
-			}
-		public int getHeight()
-			{
-			return 1;
-			}
-		}
 	
 	
 	public class MultiWriter
@@ -153,17 +160,6 @@ public class JSVelocity
 		}
 	
 	
-	private void usage()
-		{
-		System.out.println("JS Velocity. Pierre Lindenbaum PhD. 2016.");
-		System.out.println("Options:");
-		System.err.println(" -C (key) (class.qualified.Name) add this Class into the context.");
-		System.err.println(" -c (key) (class.qualified.Name) add an instance of Class into the context.");
-		System.err.println(" -s (key) (string) add this string into the context.");
-		System.err.println(" -e (key) (json-expr) add this json expression into the context.");
-		System.err.println(" -f (key) (json-file) add this json file into the context.");
-		System.err.println(" -i (key) and read stdin-json to the context.");
-		}
 	private void put(final String key,final Object o)
 		{
 		LOG.info("adding key="+key+" as "+(o==null?"null object":o.getClass().getName()));
@@ -173,106 +169,240 @@ public class JSVelocity
 			}
 		context.put(key,o);
 		}
-	private void run(final String args[]) throws Exception
-		   { 
-		    String readstdin=null;
-		    int optind=0;
-		    while(optind< args.length)
-		        {
-		        if(args[optind].equals("-h") || args[optind].equals("--help"))
-		            {
-					usage();
-		            return;
-		            }
-		        else if(args[optind].equals("-o") && optind+1< args.length)
-					{
-					outDir=new File(args[++optind]);
-					}
-			else if(args[optind].equals("-i") && optind+1< args.length)
-				{
-				readstdin=args[++optind];
-				}
-			else if((args[optind].equals("-C") || args[optind].equals("--class")) && optind+2< args.length)
-				{
-				final String key=args[++optind];
-				final String className=args[++optind];
-				try
-					{
-					put(key,Class.forName(className));
-					}
-				catch(Exception err)
-					{
-					LOG.error("Cannot load class "+className);
-					System.exit(-1);
-					}
-				}
-			else if((args[optind].equals("-c") || args[optind].equals("--instance")) && optind+2< args.length)
-				{
-				final String key=args[++optind];
-				final String className=args[++optind];
-				try
-					{
-					put(key,Class.forName(className).newInstance());
-					}
-				catch(Exception err)
-					{
-					System.err.println("Cannot create instance of class "+className);
-					System.exit(-1);
-					}
-				}
-			else if((args[optind].equals("-s") || args[optind].equals("--string")) && optind+2< args.length)
-				{
-				final String key=args[++optind];
-				final String value=args[++optind];
-				put(key,value);
-				}
-			else if((args[optind].equals("-e") || args[optind].equals("--jsonstring")) && optind+2< args.length)
-				{
-				final String key=args[++optind];
-				final Object value = JSUtils.parse(new StringReader(args[++optind]));
-				put(key,value);
-				}
-			else if((args[optind].equals("-f") || args[optind].equals("--json")) && optind+2< args.length)
-				{
-				final String key=args[++optind];
-				final FileReader r=new FileReader(args[++optind]);
-				final Object value= JSUtils.parse(r);
-				put(key,value);
-				r.close();
-				}
-            else if(args[optind].equals("--"))
-                {
-                ++optind;
-                break;
-                }
-            else if(args[optind].startsWith("-"))
-                {
-                LOG.error("Unknown option "+args[optind]);
-                System.exit(-1);
-                }
-            else
-                {
-                break;
-                }
-            ++optind;
-            }
-		if(readstdin!=null)
-			{
-			LOG.info("Reading from stdin");
-			Object o= JSUtils.parse(System.in);
-			put(readstdin,o);
+	@Parameter(names= {"-h","--help"},description="Show Help",help=true)
+	private boolean showHelp=false;
+	@Parameter(description = "Files")
+	private List<String> files=new ArrayList<>();
+	@Parameter(names= {"-o","--output","--directory"},description = "Output directory")
+	private File outDir=null;
+
+	@Parameter(names= {"-C","--class"},arity=2,description = "Add this java Class into the context..")
+	private List<String> inputJavaClasses = new ArrayList<>();
+	@Parameter(names= {"-c","--instance"},arity=2,description = "Add this java instance into the context..")
+	private List<String> inputJavaInstances = new ArrayList<>();
+	@Parameter(names= {"-s","--string"},arity=2,description = "Add this String into the context..")
+	private List<String> inputStrings= new ArrayList<>();
+	@Parameter(names= {"-e","--expr"},arity=2,description = "Add this JSON-Expression into the context..")
+	private List<String> inputJsonExpr= new ArrayList<>();
+	@Parameter(names= {"-f","--json"},arity=2,description = "Add this JSON-File into the context..")
+	private List<String> inputJsonFiles= new ArrayList<>();
+	@Parameter(names= {"-gson","--gson"},description = "Do not convert json object to java. Keep the com.google.gson.* objects")
+	private boolean keep_gson = false;
+	@Parameter(names= {"-tsv","--tsv"},arity=2,description = "Read tab delimited table in file.")
+	private List<String> inputTsvFiles= new ArrayList<>();
+	@Parameter(names= {"-lenient","--lenient"},description = "Use a lenient json parser")
+	private boolean lenient_json_parser = false;
+
+	
+	private static void close(Closeable c) {
+		if(c==null) return;
+		try {
+			c.close();
+		} catch(Exception err) {
+			
+		}
+		}
+	
+	private List<List<String>> readDelim(String path,final Pattern delim) {
+		BufferedReader r= null;
+		try {
+			r= new BufferedReader(new FileReader(path));
+			return r.lines().map(L->Arrays.asList(delim.split(L))).collect(Collectors.toList());
+			} 
+		catch(final IOException err) {
+			throw new RuntimeException(err);
 			}
-		if(optind+1!=args.length)
+		finally {
+			close(r);
+			}
+		}
+	
+	private List<Map<String,String>> readTable(String path,final Pattern delim) {
+		BufferedReader r= null;
+		try {
+			r= new BufferedReader(new FileReader(path));
+			final String first=r.readLine();
+			if(first==null) throw new IOException("Cannot read first line of "+path);
+			final String header[]=delim.split(first);
+			return r.lines().map(L->{
+				final String tokens[]=delim.split(L);
+				final Map<String,String> map = new LinkedHashMap<>(header.length);
+				for(int i=0;i< tokens.length && i< header.length;i++)
+					{
+					map.put(header[i], tokens[i]);
+					}
+				for(int i= tokens.length;i< header.length;i++)
+					{
+					map.put(header[i],"");
+					}
+				return map;
+				}).collect(Collectors.toList());
+			} 
+		catch(final IOException err) {
+			throw new RuntimeException(err);
+			}
+		finally {
+			close(r);
+			}
+		}
+
+	
+	private Object convertJson(final JsonElement  E)
+		{	
+		if(this.keep_gson) return E;
+		return json2java(E);
+		}
+	
+	private Object json2java(final JsonElement  E){
+		if(E.isJsonNull()) {
+			return null;
+			}
+		else if(E.isJsonArray())
+			{
+			final JsonArray o = E.getAsJsonArray();
+			final List<Object> L = new ArrayList<>(o.size());
+			for(int i=0;i< o.size();i++)
+				{
+				L.add(json2java(o.get(i)));
+				}
+			return L;
+			}
+		else if(E.isJsonObject())
+			{
+			final JsonObject o = E.getAsJsonObject();
+			final Map<String,Object> M = new LinkedHashMap<>();
+			o.entrySet().stream().forEach(KV->M.put(KV.getKey(), json2java(KV.getValue())));
+			return M;
+			}
+		else if(E.isJsonPrimitive())
+			{
+			final JsonPrimitive prim = E.getAsJsonPrimitive();
+			if(prim.isString()) return prim.getAsString();
+			if(prim.isBoolean()) return prim.getAsBoolean();
+			if(prim.isNumber()) {
+				try {return new Integer(prim.getAsString());} catch(NumberFormatException e) {}
+				try {return new Long(prim.getAsString());} catch(NumberFormatException e) {}
+				try {return new BigInteger(prim.getAsString());} catch(NumberFormatException e) {}
+				try {return new Double(prim.getAsString());} catch(NumberFormatException e) {}
+				try {return new BigDecimal(prim.getAsString());} catch(NumberFormatException e) {}
+				}
+			}
+		throw new IllegalStateException("Cannot convert "+E);
+		};
+	
+	private <T>  List<AbstractMap.SimpleEntry<String,T>> mapKeyValues(
+		final List<String> array,
+		final Function<String,T> mapper)
+		{
+		final List<AbstractMap.SimpleEntry<String,T>> L = new ArrayList<>(array.size()/2);
+		for(int i=0;i+1<array.size();i+=2)
+			{
+			System.err.println(">>"+array.get(i+1)+"\n"+array);
+			L.add(new AbstractMap.SimpleEntry<String,T>(
+					array.get(i),
+					mapper.apply(array.get(i+1))
+					));
+			}
+		return L;
+		}
+	
+	private JsonElement parseJson(final Reader r) {
+		JsonParser parser= new JsonParser();
+		JsonReader jr = new JsonReader(r);
+		if(this.lenient_json_parser) jr.setLenient(true);
+		final JsonElement E= parser.parse(jr);
+		return E;
+		}
+	
+
+	
+	private void run(final String args[]) throws Exception
+		{ 
+		final JCommander jcommander= new JCommander(this);
+		jcommander.setProgramName("jsvelocity");
+		jcommander.parse(args);
+		if(this.showHelp)
+			{
+			jcommander.usage();
+			return;
+			}
+		
+		   
+		
+		if(this.files.size()!=1)
 			{
 			LOG.error("Illegal number of arguments. Expected one Velocity Template.\n");
 			System.exit(-1);
 			}
 		
+		
+		this.mapKeyValues(this.inputJavaClasses,className->{
+			try
+				{
+				return Class.forName(className);
+				}
+			catch(final Exception err)
+				{
+				LOG.error("Cannot load class "+className);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+		
+		this.mapKeyValues(this.inputJavaInstances,className->{
+			try
+				{
+				return Class.forName(className).newInstance();
+				}
+			catch(final Exception err)
+				{
+				LOG.error("Cannot load new instance of class "+className);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+		
+		this.mapKeyValues(this.inputStrings,value->value).
+			forEach(KV->put(KV.getKey(),KV.getValue()));
+
+		this.mapKeyValues(this.inputJsonExpr,value->{
+			try 
+				{
+				System.err.println(value);
+				return  convertJson(parseJson(new StringReader(value)));
+				}
+			catch(Exception err)
+				{
+				LOG.error("Cannot parse expression "+value);
+				System.exit(-1);
+				return null;
+				}
+			
+			}).
+			forEach(KV->put(KV.getKey(),KV.getValue()));
+
+		this.mapKeyValues(this.inputJsonFiles,value->{
+			try
+			{
+			final FileReader r=new FileReader(value);
+			final Object o= convertJson(parseJson(r));
+			r.close();
+			return o;
+			} catch(final IOException err)
+				{
+				LOG.error("Cannot read file "+value);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+
+		
+		
 		final MultiWriter out=new MultiWriter();
 		put("out",out);
 		put("tool",new Tools());
 		put("now",new java.sql.Timestamp(System.currentTimeMillis()));
-		final File file =new File(args[optind++]);
+		final File file = new File(this.files.get(0));
 		LOG.info("Reading VELOCITY template from file "+file);
 		final VelocityEngine ve = new VelocityEngine();
 		ve.setProperty("resource.loader", "file");
@@ -290,7 +420,7 @@ public class JSVelocity
 	    }
 	
 	
-	public static void main(String args[])
+	public static void main(final String args[])
 		{
 		try {
 			new JSVelocity().run(args);

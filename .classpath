@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec/commons-codec/1.10/commons-codec-1.10.jar"/>
@@ -8,5 +9,6 @@
 	<classpathentry kind="lib" path="lib/commons-lang/commons-lang/2.4/commons-lang-2.4.jar"/>
 	<classpathentry kind="lib" path="lib/org/apache/logging/log4j/log4j-api/2.5/log4j-api-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/org/apache/velocity/velocity/1.7/velocity-1.7.jar"/>
+	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/com/beust/jcommander/1.64/jcommander-1.64.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

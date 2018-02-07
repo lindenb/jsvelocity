@@ -33,20 +33,29 @@ log4j.jars = \
 
 apache.velocity.jars  =  \
         $(lib.dir)/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar \
+	$(lib.dir)/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar \
         $(lib.dir)/org/apache/velocity/velocity/1.7/velocity-1.7.jar \
         $(lib.dir)/commons-lang/commons-lang/2.4/commons-lang-2.4.jar
+
+jcommander.jar= \
+	$(lib.dir)/com/beust/jcommander/1.64/jcommander-1.64.jar
+
+
+testng.jars = \
+	$(lib.dir)/org/testng/testng/6.11/testng-6.11.jar \
+	${jcommander.jar}
 
 gson.jars  =  \
 	$(lib.dir)/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar
 
 
-all_maven_jars = $(sort  ${log4j.jars} ${commons.codec.jars} ${apache.velocity.jars}  ${gson.jars})
+all_maven_jars = $(sort  ${log4j.jars} ${commons.codec.jars} ${apache.velocity.jars}  ${gson.jars} ${jcommander.jar} )
 
 .PHONY: all jsvelocity test
 
 all: test jsvelocity
 
-test: jsvelocity
+test: jsvelocity ${testng.jars}
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -h
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar tests/test001.vm
 	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e str '"ATAatagtagta\"_"' tests/test002.vm
@@ -61,15 +70,6 @@ jsvelocity : ${dist.dir}/jsvelocity.jar
 
 ${dist.dir}/jsvelocity.jar: \
 		${src.dir}/com/github/lindenb/jsvelocity/JSVelocity.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSString.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSNode.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSDecimal.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSArray.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSInteger.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSNull.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSUtils.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSMap.java \
-		${src.dir}/com/github/lindenb/jsvelocity/json/JSBoolean.java \
 		${src.dir}/com/github/lindenb/jsvelocity/Tools.java \
  		${all_maven_jars}
 	mkdir -p ${tmp.dir}/META-INF ${dist.dir}
@@ -96,6 +96,6 @@ ${dist.dir}/jsvelocity.jar: \
 	rm -rf ${tmp.dir}
 
 
-${all_maven_jars}  : 
+${all_maven_jars} ${testng.jars}  : 
 	mkdir -p $(dir $@) && wget -O "$@" "http://central.maven.org/maven2/$(patsubst ${lib.dir}/%,%,$@)"
 
