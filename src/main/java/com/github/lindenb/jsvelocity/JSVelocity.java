@@ -27,6 +27,7 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -50,6 +51,7 @@ import org.apache.velocity.app.VelocityEngine;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.converters.StringConverter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -57,8 +59,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonReader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -69,111 +71,57 @@ import org.apache.logging.log4j.Logger;
  */
 public class JSVelocity
 	{
-	private static final Logger LOG=LogManager.getLogger(JSVelocity.class);
+	private static final Logger LOG=LoggerFactory.getLogger(JSVelocity.class);
 	private VelocityContext context=new VelocityContext();
+	static final String PARAM_JSVELOCITY_INSTANCE="\0"+JSVelocity.class.getName()+".instance";
 	
-	
-	
-	
-	public class MultiWriter
-		extends Writer
+	public static interface HierachicalContainer
 		{
-		private PrintWriter pw=null;
-		public File filename=null;
-		
-		public File getFile()
-			{
-			return this.filename;
-			}
-		
-		public void _open(String fName,boolean ignoreIfExists)throws IOException
-			{
-			close();
-			
-			this.filename=new File(JSVelocity.this.outDir,fName);
-			if(ignoreIfExists && this.filename.exists())
-					{
-					return;
-					}
-			LOG.info("opening "+this.filename);
-			if(this.filename.getParentFile()!=null)
-				{
-				this.filename.getParentFile().mkdirs();
-				}
-			this.pw=new PrintWriter(this.filename);
-			}
-		
-		
-		public void open(final String fName)throws IOException
-			{
-			_open(fName,false);
-			}
-			
-		public void openIfMissing(final String fName)throws IOException
-			{
-			_open(fName,true);
-			}
-		
-		@Override
-		public void close() throws IOException
-			{
-			flush();
-			if(pw!=null)
-				{
-				LOG.info("closing "+this.filename);
-				pw.close();
-				pw=null;	
-				}
-			filename=null;
-			}
-	
-		@Override
-		public void flush() throws IOException
-			{
-			if(pw!=null)
-				{
-				pw.flush();
-				}
-			else if(this.filename==null)
-				{
-				System.out.flush();
-				}
-			}
-	
-		@Override
-		public void write(char[] cbuf, int off, int len) throws IOException
-			{
-			if(pw!=null)
-				{
-				pw.write(cbuf, off, len);		
-				}
-			else if(this.filename==null)
-				{
-				System.out.print(new String(cbuf, off, len));
-				}
-			}
-		@Override
-		public String toString()
-			{
-			return filename==null?"null":filename.toString();
-			}
+		public Object parent();
 		}
 	
+	@SuppressWarnings("serial")
+	public static class ArrayWithParent extends ArrayList<Object>
+		implements HierachicalContainer
+		{
+		final Object owner;
+		ArrayWithParent(final Object owner,final int reserve) {
+			super(reserve);
+			this.owner = owner;
+			}
+		@Override
+		public Object parent() { return this.owner;}
+		}
+	@SuppressWarnings("serial")
+	public static class MapWithParent extends LinkedHashMap<String,Object>
+		implements HierachicalContainer
+		{
+		final Object owner;
+		MapWithParent(final Object owner) {
+			this.owner = owner;
+			}
+		@Override
+		public Object parent() { return this.owner;}
+		}
+
 	
-	private void put(final String key,final Object o)
+	
+	void put(final String key,final Object o)
 		{
 		LOG.info("adding key="+key+" as "+(o==null?"null object":o.getClass().getName()));
-		if(context.containsKey(key))
+		if(this.context.containsKey(key))
 			{
 			LOG.warn("Key="+key+" defined twice");
 			}
-		context.put(key,o);
+		this.context.put(key,o);
 		}
 	@Parameter(names= {"-h","--help"},description="Show Help",help=true)
 	private boolean showHelp=false;
 	@Parameter(description = "Files")
 	private List<String> files=new ArrayList<>();
-	@Parameter(names= {"-o","--output","--directory"},description = "Output directory")
+	@Parameter(names= {"-o","--output"},description = "Output File. Default: standout")
+	private File outputFile=null;
+	@Parameter(names= {"-D","--dir","--directory"},description = "Output directory")
 	private File outDir=null;
 
 	@Parameter(names= {"-C","--class"},arity=2,description = "Add this java Class into the context..")
@@ -182,7 +130,7 @@ public class JSVelocity
 	private List<String> inputJavaInstances = new ArrayList<>();
 	@Parameter(names= {"-s","--string"},arity=2,description = "Add this String into the context..")
 	private List<String> inputStrings= new ArrayList<>();
-	@Parameter(names= {"-e","--expr"},arity=2,description = "Add this JSON-Expression into the context..")
+	@Parameter(names= {"-e","--expr"},arity=2,description = "Add this JSON-Expression into the context..",converter=StringConverter.class,listConverter=StringConverter.class)
 	private List<String> inputJsonExpr= new ArrayList<>();
 	@Parameter(names= {"-f","--json"},arity=2,description = "Add this JSON-File into the context..")
 	private List<String> inputJsonFiles= new ArrayList<>();
@@ -247,38 +195,51 @@ public class JSVelocity
 		}
 
 	
-	private Object convertJson(final JsonElement  E)
+	private List<String> readList(String path) {
+		BufferedReader r= null;
+		try {
+			r= new BufferedReader(new FileReader(path));
+			return r.lines().collect(Collectors.toList());
+			} 
+		catch(final IOException err) {
+			throw new RuntimeException(err);
+			}
+		finally {
+			close(r);
+			}
+		}
+
+	
+	Object convertJson(final JsonElement  E)
 		{	
 		if(this.keep_gson) return E;
-		return json2java(E);
+		return json2java(null,E);
 		}
 	
-	private Object json2java(final JsonElement  E){
+	private Object json2java(final Object owner,final JsonElement  E){
 		if(E.isJsonNull()) {
 			return null;
 			}
 		else if(E.isJsonArray())
 			{
 			final JsonArray o = E.getAsJsonArray();
-			final List<Object> L = new ArrayList<>(o.size());
+			final List<Object> L = new ArrayWithParent(owner,o.size());
 			for(int i=0;i< o.size();i++)
 				{
-				L.add(json2java(o.get(i)));
+				L.add(json2java(L,o.get(i)));
 				}
 			return L;
 			}
 		else if(E.isJsonObject())
 			{
 			final JsonObject o = E.getAsJsonObject();
-			final Map<String,Object> M = new LinkedHashMap<>();
-			o.entrySet().stream().forEach(KV->M.put(KV.getKey(), json2java(KV.getValue())));
+			final Map<String,Object> M = new MapWithParent(owner);
+			o.entrySet().stream().forEach(KV->M.put(KV.getKey(), json2java(M,KV.getValue())));
 			return M;
 			}
 		else if(E.isJsonPrimitive())
 			{
 			final JsonPrimitive prim = E.getAsJsonPrimitive();
-			if(prim.isString()) return prim.getAsString();
-			if(prim.isBoolean()) return prim.getAsBoolean();
 			if(prim.isNumber()) {
 				try {return new Integer(prim.getAsString());} catch(NumberFormatException e) {}
 				try {return new Long(prim.getAsString());} catch(NumberFormatException e) {}
@@ -286,6 +247,10 @@ public class JSVelocity
 				try {return new Double(prim.getAsString());} catch(NumberFormatException e) {}
 				try {return new BigDecimal(prim.getAsString());} catch(NumberFormatException e) {}
 				}
+			if(prim.isBoolean()) return prim.getAsBoolean();
+			if(prim.isString()) return prim.getAsString();
+			
+			
 			}
 		throw new IllegalStateException("Cannot convert "+E);
 		};
@@ -306,7 +271,7 @@ public class JSVelocity
 		return L;
 		}
 	
-	private JsonElement parseJson(final Reader r) {
+	JsonElement parseJson(final Reader r) {
 		JsonParser parser= new JsonParser();
 		JsonReader jr = new JsonReader(r);
 		if(this.lenient_json_parser) jr.setLenient(true);
@@ -316,7 +281,7 @@ public class JSVelocity
 	
 
 	
-	private void run(final String args[]) throws Exception
+	private int run(final String args[]) throws Exception
 		{ 
 		final JCommander jcommander= new JCommander(this);
 		jcommander.setProgramName("jsvelocity");
@@ -324,7 +289,7 @@ public class JSVelocity
 		if(this.showHelp)
 			{
 			jcommander.usage();
-			return;
+			return 0;
 			}
 		
 		   
@@ -398,13 +363,33 @@ public class JSVelocity
 
 		
 		
-		final MultiWriter out=new MultiWriter();
+		final Writer out;
+		if(this.outputFile==null)
+			{
+			LOG.debug("writing to stdout");
+			out = new PrintWriter(System.out);
+			}
+		else
+			{
+			LOG.debug("writing to "+this.outputFile);
+			out = new FileWriter(this.outputFile);
+			}
 		put("out",out);
 		put("tool",new Tools());
 		put("now",new java.sql.Timestamp(System.currentTimeMillis()));
+		put(PARAM_JSVELOCITY_INSTANCE, this);
 		final File file = new File(this.files.get(0));
 		LOG.info("Reading VELOCITY template from file "+file);
 		final VelocityEngine ve = new VelocityEngine();
+		
+		
+		
+		ve.setProperty("userdirective",
+				Arrays.asList(JsonDirective.class,DivertDirective.class).
+				stream().
+				map(C->C.getName()).
+				collect(Collectors.joining(",")
+				));
 		ve.setProperty("resource.loader", "file");
 		ve.setProperty("file.resource.loader.description", "Velocity File Resource Loader");
 		ve.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
@@ -417,20 +402,26 @@ public class JSVelocity
 		template.merge( this.context, out);
 		out.flush();
 		out.close();
+		return 0;
 	    }
 	
+	public int execute(final String args[]) {
+		try 
+			{
+			int i = this.run(args);
+			return i;
+			}
+		catch(final Throwable err)
+			{
+			LOG.error("FAILURE", err);
+			return -1;
+			}
+		}
 	
 	public static void main(final String args[])
 		{
-		try {
-			new JSVelocity().run(args);
-			}
-		catch(Throwable err)
-			{
-			LOG.error(err);
-			err.printStackTrace();
-			System.exit(-1);
-			}
+		final int err= new JSVelocity().execute(args);
+		System.exit(err);
 		}
 	
 }

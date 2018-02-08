@@ -29,14 +29,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonParser;
 
 public class Tools
 	{
-	private static final Logger LOG=LogManager.getLogger(Tools.class);
+	private static final Logger LOG=LoggerFactory.getLogger(Tools.class);
 
 	private InputStream openStream(Object o) throws Exception
 	{

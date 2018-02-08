@@ -9,6 +9,7 @@ endif
 
 
 src.dir=${this.dir}src/main/java
+src.test.dir=${this.dir}src/test/java
 generated.dir=${this.dir}src/main/generated-sources
 tmp.dir=${this.dir}_tmp
 tmp.mft=${tmp.dir}/META-INF/MANIFEST.MF
@@ -32,10 +33,11 @@ log4j.jars = \
 	$(lib.dir)/org/apache/logging/log4j/log4j-api/2.5/log4j-api-2.5.jar
 
 apache.velocity.jars  =  \
-        $(lib.dir)/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar \
 	$(lib.dir)/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar \
-        $(lib.dir)/org/apache/velocity/velocity/1.7/velocity-1.7.jar \
-        $(lib.dir)/commons-lang/commons-lang/2.4/commons-lang-2.4.jar
+        $(lib.dir)/org/apache/velocity/velocity-engine-core/2.0/velocity-engine-core-2.0.jar \
+        $(lib.dir)/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
+        $(lib.dir)/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar \
+        $(lib.dir)/org/slf4j/slf4j-simple/1.7.25/slf4j-simple-1.7.25.jar
 
 jcommander.jar= \
 	$(lib.dir)/com/beust/jcommander/1.64/jcommander-1.64.jar
@@ -55,28 +57,24 @@ all_maven_jars = $(sort  ${log4j.jars} ${commons.codec.jars} ${apache.velocity.j
 
 all: test jsvelocity
 
-test: jsvelocity ${testng.jars}
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -h
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar tests/test001.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e str '"ATAatagtagta\"_"' tests/test002.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '1989128349182798723982792378912873' tests/test003.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e m '{"a":1,"b":null,"c":"abcd","d":[],"e":{},"d":true}' tests/test004.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e a '["a",1,"b",null,"c","abcd","d",[],"e",{},"d",true]' tests/test005.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e T 'true' -e F 'false' tests/test006.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value '198912834918279872398.0E100' tests/test007.vm
-	${JAVA} -jar  ${dist.dir}/jsvelocity.jar -e value 'null' tests/test008.vm
+test: jsvelocity  ${all_maven_jars} ${testng.jars} testng.xml
+	rm -rf ${tmp.dir}
+	mkdir -p ${tmp.dir}/META-INF ${dist.dir}
+	${JAVAC} -d ${tmp.dir} -g -classpath "$(subst $(SPACE),:,$(filter %.jar,$^))" -sourcepath ${src.dir}  `find ${src.dir} ${src.test.dir} -type f -name "*.java"`
+	java -cp  "$(subst $(SPACE),:,$(filter %.jar,$^)):${tmp.dir}" org.testng.TestNG testng.xml
+	rm -rf ${tmp.dir}
 	
-jsvelocity : ${dist.dir}/jsvelocity.jar
+${dist.dir}/jsvelocity.jar : jsvelocity ${testng.jars}
+	
 
-${dist.dir}/jsvelocity.jar: \
-		${src.dir}/com/github/lindenb/jsvelocity/JSVelocity.java \
-		${src.dir}/com/github/lindenb/jsvelocity/Tools.java \
- 		${all_maven_jars}
+
+jsvelocity: ${all_maven_jars}
+	rm -rf ${tmp.dir}
 	mkdir -p ${tmp.dir}/META-INF ${dist.dir}
 	#expand
 	$(foreach J,$(filter %.jar,$^),unzip -o ${J} -d ${tmp.dir};)
 	#compile
-	${JAVAC} -d ${tmp.dir} -g -classpath "$(subst $(SPACE),:,$(filter %.jar,$^))" -sourcepath ${src.dir} $(filter %.java,$^)
+	${JAVAC} -d ${tmp.dir} -g -classpath "$(subst $(SPACE),:,$(filter %.jar,$^))" -sourcepath ${src.dir}  `find ${src.dir} -type f -name "*.java"`
 	#create META-INF/MANIFEST.MF
 	echo "Manifest-Version: 1.0" > ${tmp.mft}
 	echo "Main-Class: com.github.lindenb.jsvelocity.JSVelocity" >> ${tmp.mft}
@@ -84,13 +82,11 @@ ${dist.dir}/jsvelocity.jar: \
 	$(if $(realpath .git/refs/heads/master),cat $(realpath .git/refs/heads/master), echo "undefined")  >> ${tmp.mft}
 	echo -n "Compile-Date: " >> ${tmp.mft}
 	date +%Y-%m-%d:%H-%m-%S >> ${tmp.mft}
-	#create lgo4j config file
-	echo '<?xml version="1.0" encoding="UTF-8"?><Configuration status="WARN"><Appenders><Console name="Console" target="SYSTEM_OUT"><PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/></Console></Appenders><Loggers><Root level="error"><AppenderRef ref="Console"/></Root></Loggers></Configuration>' > ${tmp.dir}/log4j2.xml
 	#create jar
 	${JAR} cfm $@ ${tmp.mft}  -C ${tmp.dir} .
 	#create bash executable
 	echo '#!/bin/bash' > ${dist.dir}/jsvelocity
-	echo '${JAVA} -Dfile.encoding=UTF8 -Xmx500m $(if ${http.proxy.host},-Dhtt.proxyHost=${http.proxy.host})  $(if ${http.proxy.port},-Dhtt.proxyPort=${http.proxy.port}) -cp "${dist.dir}/jsvelocity.jar" com.github.lindenb.jsvelocity.JSVelocity  $$*' >> ${dist.dir}/jsvelocity
+	echo '${JAVA} -Dfile.encoding=UTF8 -Xmx500m $(if ${http.proxy.host},-Dhttp.proxyHost=${http.proxy.host})  $(if ${http.proxy.port},-Dhttp.proxyPort=${http.proxy.port}) -cp "${dist.dir}/jsvelocity.jar" com.github.lindenb.jsvelocity.JSVelocity  $$*' >> ${dist.dir}/jsvelocity
 	chmod  ugo+rx ${dist.dir}/jsvelocity
 	#cleanup
 	rm -rf ${tmp.dir}
