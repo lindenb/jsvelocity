@@ -1,8 +1,0 @@
-String: ${str}
-String: is string : ${str.isString()}
-String: toUpperCase : ${str.toUpperCase()}
-String: parent : ${str.hasParentNode()}
-String: primitive : ${str.isPrimitive()}
-#foreach($c in ${str.characters()}) 
-char:$c index:${c.index} first:${c.first} last:${c.last}
-#end

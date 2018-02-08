@@ -1,6 +1,0 @@
-BigDec: ${value}
-BigDec: nodeId ${value.getNodeId()}
-BigDec: isPrimitive  ${value.isPrimitive()}
-BigDec: isBigInteger  ${value.isBigInteger()}
-BigDec: isBigDecimal  ${value.isBigDecimal()}
-

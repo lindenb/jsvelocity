@@ -1,5 +1,0 @@
-Nill: ${value}
-Nill: nodeId ${value.getNodeId()}
-Nill: isPrimitive  ${value.isPrimitive()}
-Nill: isBigInteger  ${value.isBigInteger()}
-Nill: isNull  ${value.isNull()}
