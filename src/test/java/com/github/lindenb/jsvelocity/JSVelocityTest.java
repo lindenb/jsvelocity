@@ -146,6 +146,31 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());		
 		Assert.assertTrue(divertFile.delete());	
 	}
+	
+	@DataProvider(name = "yaml1")
+	public Object[][] createYamlExamples() {
+	 return new Object[][] {
+		   {"${J[\"invoice\"]}","invoice: 34843","34843"}
+	 };
+	}
+	@Test(dataProvider = "yaml1")
+	public void testYaml(final String templateStr, final String yamlStr,final String outputStr) throws IOException {
+		final File out = File.createTempFile("test", ".out");
+		final File f=createTmpFile(".vm",templateStr);
+		final File yamlFile =createTmpFile(".yml",yamlStr);
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"--yaml","J",yamlFile.getPath(),
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),outputStr);
+		Assert.assertTrue(out.delete());
+	}
+
+	
+	
 	@Test
 	public void testJavascript() throws IOException {
 		final String templateStr="#javascript(1,\"A\") print(args[1]); for(var i=8;i<11;i++) print(\"\"+i);print(J);#{end}";

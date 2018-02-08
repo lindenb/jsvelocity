@@ -58,6 +58,8 @@ import com.google.gson.stream.JsonReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.events.Event;
 
 
 
@@ -131,6 +133,8 @@ public class JSVelocity
 	private List<String> inputJsonExpr= new ArrayList<>();
 	@Parameter(names= {"-f","--json"},arity=2,description = "Add this JSON-File into the context..")
 	private List<String> inputJsonFiles= new ArrayList<>();
+	@Parameter(names= {"-y","--yaml"},arity=2,description = "Add this YAML-File into the context..")
+	private List<String> inputYamlFiles= new ArrayList<>();
 	@Parameter(names= {"-gson","--gson"},description = "Do not convert json object to java. Keep the com.google.gson.* objects")
 	private boolean keep_gson = false;
 	@Parameter(names= {"-tsv","--tsv"},arity=2,description = "Read tab delimited table in file.")
@@ -206,7 +210,37 @@ public class JSVelocity
 		return E;
 		}
 	
-
+	private Object _parseYaml(final Object owner,Object root)
+		{
+		if(root==null) return null;
+		if(root instanceof List)
+			{
+			final List<?> o = (List<?>)root;
+			final List<Object> L = new ArrayWithParent(owner,o.size());
+			for(int i=0;i< o.size();i++)
+				{
+				L.add(_parseYaml(L,o.get(i)));
+				}
+			return L;
+			}
+		else if(root instanceof Map)
+			{
+			final Map<String,?> o = (Map)root;
+			final Map<String,Object> M = new MapWithParent(owner);
+			o.entrySet().stream().forEach(KV->M.put((String)KV.getKey(), _parseYaml(M,KV.getValue())));
+			return M;
+			}
+		else
+			{
+			return root;	
+			}
+		}
+	
+	private Object parseYaml(final Reader r) {
+		final Yaml yaml = new Yaml();
+		final Object o=_parseYaml(null,yaml.load(r));
+		return o;
+	}
 	
 	private int run(final String args[]) throws Exception
 		{ 
@@ -287,7 +321,21 @@ public class JSVelocity
 				}
 			}).forEach(KV->put(KV.getKey(),KV.getValue()));
 
-		
+		this.mapKeyValues(this.inputYamlFiles,value->{
+			try
+			{
+			final FileReader r=new FileReader(value);
+			final Object o= parseYaml(r);
+			r.close();
+			return o;
+			} catch(final IOException err)
+				{
+				LOG.error("Cannot read file "+value);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+
 		
 		final Writer out;
 		if(this.outputFile==null)

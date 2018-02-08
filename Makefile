@@ -28,16 +28,15 @@ SPACE := $(EMPTY) $(EMPTY)
 commons.codec.jars = \
 	$(lib.dir)/commons-codec/commons-codec/1.10/commons-codec-1.10.jar
 
-log4j.jars = \
-	$(lib.dir)/org/apache/logging/log4j/log4j-core/2.5/log4j-core-2.5.jar \
-	$(lib.dir)/org/apache/logging/log4j/log4j-api/2.5/log4j-api-2.5.jar
+
 
 apache.velocity.jars  =  \
 	$(lib.dir)/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar \
         $(lib.dir)/org/apache/velocity/velocity-engine-core/2.0/velocity-engine-core-2.0.jar \
         $(lib.dir)/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
         $(lib.dir)/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar \
-        $(lib.dir)/org/slf4j/slf4j-simple/1.7.25/slf4j-simple-1.7.25.jar
+        $(lib.dir)/org/slf4j/slf4j-simple/1.7.25/slf4j-simple-1.7.25.jar \
+        $(lib.dir)/org/yaml/snakeyaml/1.19/snakeyaml-1.19.jar
 
 jcommander.jar= \
 	$(lib.dir)/com/beust/jcommander/1.64/jcommander-1.64.jar
@@ -51,7 +50,7 @@ gson.jars  =  \
 	$(lib.dir)/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar
 
 
-all_maven_jars = $(sort  ${log4j.jars} ${commons.codec.jars} ${apache.velocity.jars}  ${gson.jars} ${jcommander.jar} )
+all_maven_jars = $(sort ${commons.codec.jars} ${apache.velocity.jars}  ${gson.jars} ${jcommander.jar} )
 
 .PHONY: all jsvelocity test
 
