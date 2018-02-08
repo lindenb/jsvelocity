@@ -83,7 +83,7 @@ jsvelocity: ${all_maven_jars}
 	echo -n "Compile-Date: " >> ${tmp.mft}
 	date +%Y-%m-%d:%H-%m-%S >> ${tmp.mft}
 	#create jar
-	${JAR} cfm $@ ${tmp.mft}  -C ${tmp.dir} .
+	${JAR} cfm ${dist.dir}/jsvelocity.jar ${tmp.mft}  -C ${tmp.dir} .
 	#create bash executable
 	echo '#!/bin/bash' > ${dist.dir}/jsvelocity
 	echo '${JAVA} -Dfile.encoding=UTF8 -Xmx500m $(if ${http.proxy.host},-Dhttp.proxyHost=${http.proxy.host})  $(if ${http.proxy.port},-Dhttp.proxyPort=${http.proxy.port}) -cp "${dist.dir}/jsvelocity.jar" com.github.lindenb.jsvelocity.JSVelocity  $$*' >> ${dist.dir}/jsvelocity

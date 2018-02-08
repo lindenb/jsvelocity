@@ -23,8 +23,6 @@ SOFTWARE.
 
 */
 package com.github.lindenb.jsvelocity;
-import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -42,7 +40,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.velocity.Template;
@@ -108,7 +105,7 @@ public class JSVelocity
 	
 	void put(final String key,final Object o)
 		{
-		LOG.info("adding key="+key+" as "+(o==null?"null object":o.getClass().getName()));
+		LOG.debug("adding key="+key+" as "+(o==null?"null object":o.getClass().getName()));
 		if(this.context.containsKey(key))
 			{
 			LOG.warn("Key="+key+" defined twice");
@@ -140,75 +137,6 @@ public class JSVelocity
 	private List<String> inputTsvFiles= new ArrayList<>();
 	@Parameter(names= {"-lenient","--lenient"},description = "Use a lenient json parser")
 	private boolean lenient_json_parser = false;
-
-	
-	private static void close(Closeable c) {
-		if(c==null) return;
-		try {
-			c.close();
-		} catch(Exception err) {
-			
-		}
-		}
-	
-	private List<List<String>> readDelim(String path,final Pattern delim) {
-		BufferedReader r= null;
-		try {
-			r= new BufferedReader(new FileReader(path));
-			return r.lines().map(L->Arrays.asList(delim.split(L))).collect(Collectors.toList());
-			} 
-		catch(final IOException err) {
-			throw new RuntimeException(err);
-			}
-		finally {
-			close(r);
-			}
-		}
-	
-	private List<Map<String,String>> readTable(String path,final Pattern delim) {
-		BufferedReader r= null;
-		try {
-			r= new BufferedReader(new FileReader(path));
-			final String first=r.readLine();
-			if(first==null) throw new IOException("Cannot read first line of "+path);
-			final String header[]=delim.split(first);
-			return r.lines().map(L->{
-				final String tokens[]=delim.split(L);
-				final Map<String,String> map = new LinkedHashMap<>(header.length);
-				for(int i=0;i< tokens.length && i< header.length;i++)
-					{
-					map.put(header[i], tokens[i]);
-					}
-				for(int i= tokens.length;i< header.length;i++)
-					{
-					map.put(header[i],"");
-					}
-				return map;
-				}).collect(Collectors.toList());
-			} 
-		catch(final IOException err) {
-			throw new RuntimeException(err);
-			}
-		finally {
-			close(r);
-			}
-		}
-
-	
-	private List<String> readList(String path) {
-		BufferedReader r= null;
-		try {
-			r= new BufferedReader(new FileReader(path));
-			return r.lines().collect(Collectors.toList());
-			} 
-		catch(final IOException err) {
-			throw new RuntimeException(err);
-			}
-		finally {
-			close(r);
-			}
-		}
-
 	
 	Object convertJson(final JsonElement  E)
 		{	
@@ -262,7 +190,6 @@ public class JSVelocity
 		final List<AbstractMap.SimpleEntry<String,T>> L = new ArrayList<>(array.size()/2);
 		for(int i=0;i+1<array.size();i+=2)
 			{
-			System.err.println(">>"+array.get(i+1)+"\n"+array);
 			L.add(new AbstractMap.SimpleEntry<String,T>(
 					array.get(i),
 					mapper.apply(array.get(i+1))
@@ -333,10 +260,9 @@ public class JSVelocity
 		this.mapKeyValues(this.inputJsonExpr,value->{
 			try 
 				{
-				System.err.println(value);
 				return  convertJson(parseJson(new StringReader(value)));
 				}
-			catch(Exception err)
+			catch(final Exception err)
 				{
 				LOG.error("Cannot parse expression "+value);
 				System.exit(-1);
@@ -385,7 +311,12 @@ public class JSVelocity
 		
 		
 		ve.setProperty("userdirective",
-				Arrays.asList(JsonDirective.class,DivertDirective.class).
+				Arrays.asList(
+						JsonDirective.class,
+						DivertDirective.class,
+						javascriptDirective.class,
+						ReadFileDirective.class
+						).
 				stream().
 				map(C->C.getName()).
 				collect(Collectors.joining(",")

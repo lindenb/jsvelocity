@@ -146,5 +146,85 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());		
 		Assert.assertTrue(divertFile.delete());	
 	}
+	@Test
+	public void testJavascript() throws IOException {
+		final String templateStr="#javascript(1,\"A\") print(args[1]); for(var i=8;i<11;i++) print(\"\"+i);print(J);#{end}";
+		final File f=createTmpFile(".vm",templateStr);
+		final String outputStr="A8910HELLO";
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-s","J","HELLO",
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),outputStr);
+		Assert.assertTrue(out.delete());		
+		}
+	@Test
+	public void testReadFileList() throws IOException {
+		final File dataFile=createTmpFile(".txt","A\nB\nC");
+		final String templateStr="#readfile(\"T\",\""+dataFile.getPath()+"\")${T.size()}${T[0]}${T[1]}${T[2]}";
+		final File f=createTmpFile(".vm",templateStr);
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),"3ABC");
+		Assert.assertTrue(out.delete());		
+		Assert.assertTrue(dataFile.delete());		
+		}
+	@Test
+	public void testReadFileTable() throws IOException {
+		final File dataFile=createTmpFile(".txt","A,B,C\nD,E,F");
+		final String templateStr="#readfile(\"T\",\""+dataFile.getPath()+"\",\"method:table;delim:comma;\")${T[0][1]}${T[1][0]}";
+		final File f=createTmpFile(".vm",templateStr);
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),"BD");
+		Assert.assertTrue(out.delete());		
+		Assert.assertTrue(dataFile.delete());		
+		}
 	
+	@Test
+	public void testReadFileHash() throws IOException {
+		final File dataFile=createTmpFile(".txt","x,y,z\nD,TITI,F\nG,TOTO,I");
+		final String templateStr="#readfile(\"T\",\""+dataFile.getPath()+"\",\"method:hash;pkey:y;delim:comma;\")${T[\"TITI\"][\"x\"]}${T[\"TOTO\"][\"z\"]}";
+		final File f=createTmpFile(".vm",templateStr);
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),"DI");
+		Assert.assertTrue(out.delete());		
+		Assert.assertTrue(dataFile.delete());		
+		}
+	@Test
+	public void testReadFileHashTable() throws IOException {
+		final File dataFile=createTmpFile(".txt","x,y,z\nD,TITI,F\nG,TOTO,I");
+		final String templateStr="#readfile(\"T\",\""+dataFile.getPath()+"\",\"method:hashtable;delim:comma;\")${T[0][\"x\"]}${T[1][\"z\"]}";
+		final File f=createTmpFile(".vm",templateStr);
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),"DI");
+		Assert.assertTrue(out.delete());		
+		Assert.assertTrue(dataFile.delete());		
+		}
 }

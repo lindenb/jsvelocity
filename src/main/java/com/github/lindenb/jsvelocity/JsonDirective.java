@@ -25,9 +25,9 @@ SOFTWARE.
 package com.github.lindenb.jsvelocity;
 
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 
 import org.apache.velocity.context.InternalContextAdapter;
@@ -41,11 +41,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class DivertDirective extends Directive {
-	private static final Logger LOG=LoggerFactory.getLogger(DivertDirective.class);
+public class JsonDirective extends Directive {
+	private static final Logger LOG=LoggerFactory.getLogger(JsonDirective.class);
 
     public String getName() {
-        return "divert";
+        return "json";
     }
     
     @Override
@@ -56,42 +56,32 @@ public class DivertDirective extends Directive {
     public boolean render(
     		final InternalContextAdapter ctx,final Writer w,final Node node) 
     		throws IOException, ResourceNotFoundException, ParseErrorException, MethodInvocationException {
-    	LOG.debug("render divert directive");
+    	LOG.debug("render json directive");
+    	final JSVelocity instance = (JSVelocity)ctx.get(JSVelocity.PARAM_JSVELOCITY_INSTANCE);
+    	if(instance==null) {
+    		throw new ResourceNotFoundException("Cannot find jsvelocity instance associated");
+    	}
+    	String name = null;
+    	Object json =null;
+    	for(int i=0; i<node.jjtGetNumChildren(); i++) {
+            if (node.jjtGetChild(i) != null ) {
+                if(!(node.jjtGetChild(i) instanceof ASTBlock)) {
+                	if(i==0) {
+                		name= 	String.valueOf(node.jjtGetChild(i).value(ctx));
+                		}
+                	} 
+                else
+                	{
+                	final StringWriter blockContent = new StringWriter();
+                    node.jjtGetChild(i).render(ctx, blockContent);
+                    final String jsonStr = blockContent.toString();
+                    json =  instance.convertJson(instance.parseJson(new StringReader(jsonStr) ));
+                    break;
+                	}
+            }
+    	}
     	
-    	String filename=null;
-    	boolean append=false;
-    	
-        //loop through all "params"
-        for(int i=0; i<node.jjtGetNumChildren(); i++) {
-        	 final Node child  = node.jjtGetChild(i);
-        	 if (child == null ) continue;
-        	 else if(!(child instanceof ASTBlock)) {
-        		switch(i)
-        			{
-        			case 0: filename = String.valueOf(child.value(ctx)); break;
-        			case 1: append = (Boolean)child.value(ctx);break;
-        			default:
-        				{
-        				LOG.warn("Too many arguments for "+this.getName());
-        				break;
-        				}
-        			}
-        	 	}
-        	 else
-        	 	{
-        		if(filename==null || filename.trim().isEmpty())
-	              	{
-	              	throw new ParseErrorException("filename empty or mising");
-	              	}
-    	    	final FileOutputStream fos = new FileOutputStream(filename,append);
-    	    	final PrintWriter pw = new PrintWriter(fos);
-    	    	child.render(ctx, pw);
-    	    	pw.flush();
-    	    	pw.close();
-    	    	break; 
-        	 	}
-        }
-    	
-    return true;
+    	instance.put(name, json);    	
+    	return true;
     }
 }
