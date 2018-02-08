@@ -252,4 +252,33 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());		
 		Assert.assertTrue(dataFile.delete());		
 		}
+	@Test
+	public void testClass() throws IOException {
+		final File f=createTmpFile(".vm","${S.name}");
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				"-C","S","java.lang.String",
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),String.class.getName());
+		Assert.assertTrue(out.delete());		
+		}
+	
+	@Test
+	public void testClassInstance() throws IOException {
+		final File f=createTmpFile(".vm","${S.length()}");
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				"-c","S","java.lang.String",
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),"0");
+		Assert.assertTrue(out.delete());		
+		}
 }

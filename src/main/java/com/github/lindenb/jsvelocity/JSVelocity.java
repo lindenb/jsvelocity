@@ -45,6 +45,10 @@ import java.util.stream.Collectors;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+//import org.apache.velocity.tools.ToolManager;
+//import org.apache.velocity.tools.config.ConfigurationUtils;
+//import org.apache.velocity.tools.config.FactoryConfiguration;
+//import org.apache.velocity.tools.generic.ClassTool;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -59,7 +63,6 @@ import com.google.gson.stream.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.events.Event;
 
 
 
@@ -123,7 +126,7 @@ public class JSVelocity
 	@Parameter(names= {"-D","--dir","--directory"},description = "Output directory")
 	private File outDir=null;
 
-	@Parameter(names= {"-C","--class"},arity=2,description = "Add this java Class into the context..")
+	@Parameter(names= {"-C","--class"},arity=2,description = "Add this java Class into the context. class is wrapped into a org.apache.velocity.tools.generic.ClassTool  ")
 	private List<String> inputJavaClasses = new ArrayList<>();
 	@Parameter(names= {"-c","--instance"},arity=2,description = "Add this java instance into the context..")
 	private List<String> inputJavaInstances = new ArrayList<>();
@@ -141,6 +144,9 @@ public class JSVelocity
 	private List<String> inputTsvFiles= new ArrayList<>();
 	@Parameter(names= {"-lenient","--lenient"},description = "Use a lenient json parser")
 	private boolean lenient_json_parser = false;
+	//@Parameter(names= {"--class-tool"},description = "insert a class org.apache.velocity.tools.generic.ClassTool with this name")
+	//private String classToolName=null;
+
 	
 	Object convertJson(final JsonElement  E)
 		{	
@@ -225,7 +231,8 @@ public class JSVelocity
 			}
 		else if(root instanceof Map)
 			{
-			final Map<String,?> o = (Map)root;
+			@SuppressWarnings("unchecked")
+			final Map<String,?> o = (Map<String,?>)root;
 			final Map<String,Object> M = new MapWithParent(owner);
 			o.entrySet().stream().forEach(KV->M.put((String)KV.getKey(), _parseYaml(M,KV.getValue())));
 			return M;
@@ -265,7 +272,8 @@ public class JSVelocity
 		this.mapKeyValues(this.inputJavaClasses,className->{
 			try
 				{
-				return Class.forName(className);
+				final Class<?> clazz = Class.forName(className);
+				return clazz;
 				}
 			catch(final Exception err)
 				{
@@ -354,7 +362,17 @@ public class JSVelocity
 		put(PARAM_JSVELOCITY_INSTANCE, this);
 		final File file = new File(this.files.get(0));
 		LOG.info("Reading VELOCITY template from file "+file);
+		
+		/*if(this.classToolName!=null) {
+			put(this.classToolName,new ClassTool());
+			}*/
+		
+		// ToolManager manager = new ToolManager();
+		// manager.configure("toolbox.xml");
 		final VelocityEngine ve = new VelocityEngine();
+		// https://stackoverflow.com/questions/46118555
+		//manager.setVelocityEngine(ve);
+		
 		
 		
 		
