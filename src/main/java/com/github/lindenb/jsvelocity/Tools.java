@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -55,6 +56,40 @@ public class Tools
 	{
 	private static final Logger LOG=LoggerFactory.getLogger(Tools.class);
 
+	private static class IntIterable
+		implements Iterable<Integer>
+		{
+		private final int beg;
+		private final int end;
+		private final int shift;
+		IntIterable(int beg,int end,int shift) {
+			this.beg = beg;
+			this.end = end;
+			this.shift = shift;
+			if(this.shift <=0) throw new IllegalArgumentException("shift <= 0");
+			}
+		@Override
+		public Iterator<Integer> iterator() {
+			return new Iter();
+			}
+		private class Iter implements Iterator<Integer>
+			{
+			private int curr = IntIterable.this.beg;
+			@Override
+			public boolean hasNext() {
+				return this.curr< IntIterable.this.end;
+				}
+			@Override
+			public Integer next() {
+				if(!hasNext()) throw new IllegalStateException("bad index");
+				int n= this.curr;
+				this.curr+= IntIterable.this.shift;
+				return n;
+				}
+			}
+		}
+	
+	
 	private InputStream openStream(Object o) throws Exception
 		{
 		LOG.info("open stream "+o);
@@ -78,6 +113,21 @@ public class Tools
 		return in;
 		}
 
+	public Iterable<Integer> range(final Object end)
+		{	
+		return range(0,end);
+		}
+	
+	public Iterable<Integer> range(final Object beg,final Object end)
+		{	
+		return range(beg,end,1);
+		}
+	
+	public Iterable<Integer> range(final Object beg,final Object end,final Object shift)
+		{	
+		return new IntIterable(this.parseInt(beg),this.parseInt(end),this.parseInt(shift));
+		}
+	
 	public String capitalize(final Object o) {
 		return o== null ?
 				"":

@@ -321,7 +321,10 @@ public class JSVelocityTest {
 		   {"${tool.before(\"GAATTC\",\"X\")}","-s","",""},
 		   {"${tool.parseInt($J)}","-s","12345","12345"},
 		   {"${tool.parseInt($J)}","-s","12345.123","12345"},
-		   {"${tool.parseDouble($J)}","-s","12345.123","12345.123"}
+		   {"${tool.parseDouble($J)}","-s","12345.123","12345.123"},
+		   {"#foreach($i in ${tool.range($J)})$i#end","-s","4","0123"},
+		   {"#foreach($i in ${tool.range(1,$J)})$i#end","-s","4","123"},
+		   {"#foreach($i in ${tool.range(1,$J,2)})$i#end","-s","4","13"}
 	 };
 	}
 	
