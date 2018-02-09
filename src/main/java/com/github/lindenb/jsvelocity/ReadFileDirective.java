@@ -103,7 +103,7 @@ public class ReadFileDirective extends Directive {
     
     Predicate<String> lineFilter =(S)->!S.trim().isEmpty();
     int ignoreNLines=0;
-    String method="list";
+    String method="";
     Pattern delim = Pattern.compile("[\t]");
     String primaryKeyColumn= null;
     for(final String kv:modifiersStr.split("[;]"))
@@ -173,6 +173,18 @@ public class ReadFileDirective extends Directive {
     		}
     	}
     
+    if(method.isEmpty()) {
+    if(filename.endsWith(".json") || filename.endsWith(".json.gz")) {
+    	method = "json";
+    	}
+    else if(filename.endsWith(".yaml") || filename.endsWith(".yaml.gz")) {
+    	method = "yaml";
+    	}
+    else
+    	{
+    	method = "list";
+    	}
+    }
     
     final File file = new File(filename);
     if(!file.exists()) throw new ResourceNotFoundException("file doesn't exists: "+ file);

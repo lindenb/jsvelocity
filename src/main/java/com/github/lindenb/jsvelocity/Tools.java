@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -121,6 +122,65 @@ public class Tools
 			"":
 			StringEscapeUtils.escapeXml11(String.valueOf(o))
 			;
+		}
+	
+	public String md5(final Object o) {
+		return DigestUtils.md5Hex(String.valueOf(o));
+		}
+	
+	public String sha1(final Object o) {
+		return DigestUtils.sha1Hex(String.valueOf(o));
+		}
+	
+	
+	public String left(final Object o,int l) {
+		if(o==null) return "";
+		final String s= String.valueOf(o);
+		if(s.length()<=l) return s;
+		return s.substring(0,l);
+		}
+	
+	public String right(final Object o,int l) {
+		if(o==null) return "";
+		final String s= String.valueOf(o);
+		if(s.length()<=l) return s;
+		return s.substring(s.length()-l);
+		}
+	public String before(final Object o,Object subo) {
+		if(o==null || subo==null) return "";
+		final String s1= String.valueOf(o);
+		final String s2= String.valueOf(subo);
+		final int x= s1.indexOf(s2);
+		if(x==-1) return "";
+		return s1.substring(0,x);
+		}
+	
+	public String after(final Object o,Object subo) {
+		if(o==null || subo==null) return "";
+		final String s1= String.valueOf(o);
+		final String s2= String.valueOf(subo);
+		final int x= s1.indexOf(s2);
+		if(x==-1) return "";
+		return s1.substring(x+s2.length());
+		}
+	
+	public Integer parseInt(final Object o) {
+		if(o==null ) throw new NumberFormatException("cannot convert null to number");
+		final String s1= String.valueOf(o);
+		try
+			{
+			return Integer.parseInt(s1);
+			}
+		catch(NumberFormatException err)
+			{
+			return (int)Double.parseDouble(s1);
+			}
+		}
+	
+	public Double parseDouble(final Object o) {
+		if(o==null ) throw new NumberFormatException("cannot convert null to number");
+		final String s1= String.valueOf(o);
+		return Double.parseDouble(s1);
 		}
 	
 	private Function<Object,Object> fieldExtractor(final Class<?> clazz,final String field) {

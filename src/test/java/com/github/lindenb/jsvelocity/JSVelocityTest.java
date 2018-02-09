@@ -309,7 +309,19 @@ public class JSVelocityTest {
 		   {"${tool.escapeHtml($J)}","-s","<>","&lt;&gt;"},
 		   {"${tool.capitalize($J)}","-s","hello world","Hello World"},
 		   {"${tool.escapeJson($J)}","-s","\"","\\\""},
-		   {"${tool.escapeJava($J)}","-s","\"","\\\""}
+		   {"${tool.escapeJava($J)}","-s","\"","\\\""},
+		   {"${tool.left($J,2)}","-s","12345","12"},
+		   {"${tool.left($J,10)}","-s","12345","12345"},
+		   {"${tool.right($J,2)}","-s","12345","45"},
+		   {"${tool.right($J,10)}","-s","12345","12345"},
+		   {"${tool.md5($J)}","-s","","d41d8cd98f00b204e9800998ecf8427e"},
+		   {"${tool.sha1($J)}","-s","","da39a3ee5e6b4b0d3255bfef95601890afd80709"},
+		   {"${tool.before(\"GAATTC\",\"T\")}","-s","","GAA"},
+		   {"${tool.after(\"GAATTC\",\"T\")}","-s","","TC"},
+		   {"${tool.before(\"GAATTC\",\"X\")}","-s","",""},
+		   {"${tool.parseInt($J)}","-s","12345","12345"},
+		   {"${tool.parseInt($J)}","-s","12345.123","12345"},
+		   {"${tool.parseDouble($J)}","-s","12345.123","12345.123"}
 	 };
 	}
 	
