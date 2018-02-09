@@ -68,6 +68,9 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());
 	}
 	
+	
+	
+	
 	@DataProvider(name = "json1")
 	public Object[][] createJsonExamples() {
 	 return new Object[][] {
@@ -77,6 +80,21 @@ public class JSVelocityTest {
 		   {"${J[0]} ${J[2]}","[123,null,456]","123 456"}
 	 };
 	}
+	
+	@Test(dataProvider = "json1")
+	public void testInlineTemplate(final String templateStr, final String jsonStr,final String outputStr) throws IOException {
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-s","world","Pierre",
+				"-o",out.getPath(),
+				"-e","J",jsonStr,
+				"-T",templateStr
+				}));
+		Assert.assertEquals(readFile(out),outputStr);
+		Assert.assertTrue(out.delete());
+		}
 	
 	@Test(dataProvider = "json1")
 	public void testJsonExpr(final String templateStr, final String jsonStr,final String outputStr) throws IOException {
@@ -281,4 +299,33 @@ public class JSVelocityTest {
 		Assert.assertEquals(readFile(out),"0");
 		Assert.assertTrue(out.delete());		
 		}
+	
+	
+	@DataProvider(name = "tooldata1")
+	public Object[][] createData1Example() {
+	 return new Object[][] {
+		   {"${J.toUpperCase()}","-s","hello","HELLO"},
+		   {"${tool.escapeXml($J)}","-s","<>","&lt;&gt;"},
+		   {"${tool.escapeHtml($J)}","-s","<>","&lt;&gt;"},
+		   {"${tool.capitalize($J)}","-s","hello world","Hello World"},
+		   {"${tool.escapeJson($J)}","-s","\"","\\\""},
+		   {"${tool.escapeJava($J)}","-s","\"","\\\""}
+	 };
+	}
+	
+	@Test(dataProvider = "tooldata1")
+	public void testTool(final String templateStr,final String option, final String jsonStr,final String outputStr) throws IOException {
+		final File out = File.createTempFile("test", ".out");
+		final File f=createTmpFile(".vm",templateStr);
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				option,"J",jsonStr,
+				"-o",out.getPath(),
+				f.getPath()
+				}));
+		Assert.assertEquals(readFile(out),outputStr);
+		Assert.assertTrue(out.delete());
+	}
+
 }

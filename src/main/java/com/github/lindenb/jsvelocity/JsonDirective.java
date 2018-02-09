@@ -56,7 +56,7 @@ public class JsonDirective extends Directive {
     public boolean render(
     		final InternalContextAdapter ctx,final Writer w,final Node node) 
     		throws IOException, ResourceNotFoundException, ParseErrorException, MethodInvocationException {
-    	LOG.debug("render json directive");
+    	LOG.debug("render "+getName()+" directive");
     	final JSVelocity instance = (JSVelocity)ctx.get(JSVelocity.PARAM_JSVELOCITY_INSTANCE);
     	if(instance==null) {
     		throw new ResourceNotFoundException("Cannot find jsvelocity instance associated");

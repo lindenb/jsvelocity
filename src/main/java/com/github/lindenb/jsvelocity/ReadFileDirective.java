@@ -53,6 +53,8 @@ import org.apache.velocity.runtime.parser.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonParser;
+
 
 public class ReadFileDirective extends Directive {
 	private static final Logger LOG=LoggerFactory.getLogger(ReadFileDirective.class);
@@ -137,6 +139,10 @@ public class ReadFileDirective extends Directive {
     		else if(value.equalsIgnoreCase("colon"))
 				{
 				delim = Pattern.compile("[\\:]");
+				}
+    		else if(value.equalsIgnoreCase("pipe") || value.equals("|"))
+				{
+				delim = Pattern.compile("[\\|]");
 				}
     		else if(value.equalsIgnoreCase("ws") || value.equals("whitespace"))
 				{
@@ -259,6 +265,25 @@ public class ReadFileDirective extends Directive {
 			filter(lineFilter).
 			collect(Collectors.toCollection(ArrayList::new));
     	}
+    else if(method.equalsIgnoreCase("json"))
+		{
+    	final JSVelocity instance = (JSVelocity)ctx.get(JSVelocity.PARAM_JSVELOCITY_INSTANCE);
+    	if(instance==null) {
+    		throw new ResourceNotFoundException("Cannot find jsvelocity instance associated");
+    		}
+
+		final JsonParser parser = new JsonParser();
+		v = instance.convertJson(parser.parse(br));
+		}
+    else if(method.equalsIgnoreCase("yaml"))
+		{
+		final JSVelocity instance = (JSVelocity)ctx.get(JSVelocity.PARAM_JSVELOCITY_INSTANCE);
+		if(instance==null) {
+			throw new ResourceNotFoundException("Cannot find jsvelocity instance associated");
+			}
+	
+		v = instance.parseYaml(br);
+		}
     else
     	{
     	throw new RuntimeException("unknown method "+method);

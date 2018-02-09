@@ -56,7 +56,7 @@ public class DivertDirective extends Directive {
     public boolean render(
     		final InternalContextAdapter ctx,final Writer w,final Node node) 
     		throws IOException, ResourceNotFoundException, ParseErrorException, MethodInvocationException {
-    	LOG.debug("render divert directive");
+    	LOG.debug("render "+getName()+" directive");
     	
     	String filename=null;
     	boolean append=false;

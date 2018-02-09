@@ -64,7 +64,7 @@ public class javascriptDirective extends Directive {
     public boolean render(
     		final InternalContextAdapter ctx,final Writer w,final Node node) 
     		throws IOException, ResourceNotFoundException, ParseErrorException, MethodInvocationException {
-    	LOG.debug("render javascript directive");
+    	LOG.debug("render "+getName()+" directive");
     	
     	final List<Object> arguments = new ArrayList<>();
         //loop through all "params"

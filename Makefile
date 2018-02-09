@@ -31,7 +31,7 @@ commons.codec.jars = \
 
 
 apache.velocity.jars  =  \
-				$(lib.dir)/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar \
+	$(lib.dir)/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar \
         $(lib.dir)/org/apache/velocity/velocity-engine-core/2.0/velocity-engine-core-2.0.jar \
         $(lib.dir)/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
         $(lib.dir)/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar \

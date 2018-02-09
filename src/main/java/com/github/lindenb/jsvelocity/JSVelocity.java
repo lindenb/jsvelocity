@@ -144,6 +144,9 @@ public class JSVelocity
 	private List<String> inputTsvFiles= new ArrayList<>();
 	@Parameter(names= {"-lenient","--lenient"},description = "Use a lenient json parser")
 	private boolean lenient_json_parser = false;
+	@Parameter(names= {"-T","--template"},description = "inline Velocity Template expression")
+	private String inlineVelocityTemplate = null;
+
 	//@Parameter(names= {"--class-tool"},description = "insert a class org.apache.velocity.tools.generic.ClassTool with this name")
 	//private String classToolName=null;
 
@@ -243,7 +246,7 @@ public class JSVelocity
 			}
 		}
 	
-	private Object parseYaml(final Reader r) {
+	Object parseYaml(final Reader r) {
 		final Yaml yaml = new Yaml();
 		final Object o=_parseYaml(null,yaml.load(r));
 		return o;
@@ -262,11 +265,7 @@ public class JSVelocity
 		
 		   
 		
-		if(this.files.size()!=1)
-			{
-			LOG.error("Illegal number of arguments. Expected one Velocity Template.\n");
-			System.exit(-1);
-			}
+		
 		
 		
 		this.mapKeyValues(this.inputJavaClasses,className->{
@@ -360,8 +359,33 @@ public class JSVelocity
 		put("tool",new Tools());
 		put("now",new java.sql.Timestamp(System.currentTimeMillis()));
 		put(PARAM_JSVELOCITY_INSTANCE, this);
-		final File file = new File(this.files.get(0));
-		LOG.info("Reading VELOCITY template from file "+file);
+		
+		final File templateFile ;
+		if(this.inlineVelocityTemplate!=null && !this.files.isEmpty()) {
+			LOG.error("Velocity Template both defined as expression and file.\n");
+			return -1;
+			}
+		else if(this.inlineVelocityTemplate!=null)
+			{
+			templateFile = File.createTempFile("tmp.", ".vm", new File(System.getProperty("user.dir", ".")));
+			templateFile.deleteOnExit();
+			final PrintWriter pw = new PrintWriter(templateFile);
+			pw.write(this.inlineVelocityTemplate);
+			pw.flush();
+			pw.close();
+			}
+		else if(this.files.size()!=1)
+			{
+			LOG.error("Illegal number of arguments. Expected one Velocity Template.\n");
+			return -1;
+			}
+		else
+			{
+			templateFile = new File(this.files.get(0));
+			LOG.info("Reading VELOCITY template from file "+templateFile);
+			}
+		
+		
 		
 		/*if(this.classToolName!=null) {
 			put(this.classToolName,new ClassTool());
@@ -390,12 +414,12 @@ public class JSVelocity
 		ve.setProperty("resource.loader", "file");
 		ve.setProperty("file.resource.loader.description", "Velocity File Resource Loader");
 		ve.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-		if(file.getParent()!=null)
+		if(templateFile.getParent()!=null)
 			{	
-			ve.setProperty("file.resource.loader.path",file.getParent());		
+			ve.setProperty("file.resource.loader.path",templateFile.getParent());		
 			}
 		ve.init();
-		final Template template = ve.getTemplate(file.getName());
+		final Template template = ve.getTemplate(templateFile.getName());
 		template.merge( this.context, out);
 		out.flush();
 		out.close();

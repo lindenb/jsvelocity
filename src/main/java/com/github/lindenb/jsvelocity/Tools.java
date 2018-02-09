@@ -27,8 +27,24 @@ package com.github.lindenb.jsvelocity;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,29 +55,158 @@ public class Tools
 	private static final Logger LOG=LoggerFactory.getLogger(Tools.class);
 
 	private InputStream openStream(Object o) throws Exception
-	{
-	LOG.info("open stream "+o);
-	if(o==null) return null;
-	String uri=o.toString().trim();
-	if(uri.isEmpty()) return null;
-	InputStream in;
-	if( uri.startsWith("https://") ||
-		uri.startsWith("http://") ||
-		uri.startsWith("ftp://"))
 		{
-		URL url=new URL(uri);
-		in=url.openStream();
+		LOG.info("open stream "+o);
+		if(o==null) return null;
+		String uri=o.toString().trim();
+		if(uri.isEmpty()) return null;
+		InputStream in;
+		if( uri.startsWith("https://") ||
+			uri.startsWith("http://") ||
+			uri.startsWith("ftp://"))
+			{
+			URL url=new URL(uri);
+			in=url.openStream();
+			}
+		else
+			{
+			if(uri.startsWith("file://")) uri=uri.substring(7);
+			in=new FileInputStream(uri);
+			}
+		
+		return in;
 		}
-	else
-		{
-		if(uri.startsWith("file://")) uri=uri.substring(7);
-		in=new FileInputStream(uri);
+
+	public String capitalize(final Object o) {
+		return o== null ?
+				"":
+				WordUtils.capitalize(String.valueOf(o))
+				;
+	}
+	
+	public boolean isBlank(final Object o) {
+		return o==null || StringUtils.isBlank(String.valueOf(o));
+	}
+	
+	public String escapeCsv(final Object o) {
+		return o== null ?
+			"":
+			StringEscapeUtils.escapeCsv(String.valueOf(o))
+			;
+		}
+
+	public String escapeHtml(final Object o) {
+		return o== null ?
+			"":
+			StringEscapeUtils.escapeHtml4(String.valueOf(o))
+			;
 		}
 	
-	return in;
+	public String escapeJava(final Object o) {
+		return o== null ?
+			"":
+			StringEscapeUtils.escapeJava(String.valueOf(o))
+			;
+		}
+	
+	public String escapeJson(final Object o) {
+		return o== null ?
+			"":
+			StringEscapeUtils.escapeJson(String.valueOf(o))
+			;
+		}
+	
+	public String escapeXml(final Object o) {
+		return o== null ?
+			"":
+			StringEscapeUtils.escapeXml11(String.valueOf(o))
+			;
+		}
+	
+	private Function<Object,Object> fieldExtractor(final Class<?> clazz,final String field) {
+		final Optional<Method> method;
+		try {
+			method = 
+			Arrays.stream(clazz.getMethods()).
+			filter(M->
+				{
+				if(!Modifier.isPublic(M.getModifiers())) return false;
+				if(Modifier.isStatic(M.getModifiers())) return false;
+				if(M.getParameterCount()!=0) return false;
+				if(M.getReturnType().equals(Void.class)) return false;
+				String methodName = M.getName();
+				if(!(methodName.equalsIgnoreCase("is"+field) || methodName.equalsIgnoreCase("get"+field)))
+					{
+					return false;
+					}
+				return true;
+				}).findFirst();
+			
+			if(!method.isPresent())
+				{
+				final Optional<Field> of=Arrays.stream(clazz.getFields()).
+						filter(F->{
+							if(!Modifier.isPublic(F.getModifiers())) return false;
+							if(Modifier.isStatic(F.getModifiers())) return false;
+							String fieldName = F.getName();
+							return fieldName.equals(field);
+							}
+						).findFirst();
+				if(of.isPresent())
+					{
+					final Field fieldReflect = of.get();
+					return (OBJ)->{
+						try {
+							return fieldReflect.get(OBJ);
+							}
+						catch(Exception err)
+							{
+							throw new RuntimeException(err);
+							}
+						};
+					}
+				}
+			
+			if(!method.isPresent() && clazz.isAssignableFrom(Map.class))
+				{
+				return (OBJ)->{
+					final Map hash = (Map)OBJ;
+					return hash.get(field);
+					};
+				}
+			final Method m2=method.get();
+			
+			return (OBJ)->{
+				try {
+					return m2.invoke(OBJ);
+					}
+				catch(Exception err) {
+					throw new RuntimeException(err);
+					}
+				};
+			}
+		catch(final Exception err) {
+			LOG.error(err.getMessage(),err);
+			}
+		
+		throw new ResourceNotFoundException("Cannot find field \""+field+"\" for class "+clazz);
+		}
+	
+	private Object extractField(final Object o,final String field) {
+		return o==null?null:fieldExtractor(o.getClass(),field).apply(o);
 	}
-
-
+	
+	public Collection<?> extract(Collection<?> C,final String field) {
+		if(C==null || C.isEmpty()) return Collections.emptySet();
+		return C.stream().map(O->extractField(O, field)).collect(Collectors.toList());
+		}
+	
+	public Set toSet(Collection o) {
+		if(o==null || o.isEmpty()) return Collections.emptySet();
+		return new HashSet<>(o);
+		}
+	
+	
 public String getContent(Object o) throws Exception
 	{
 	InputStream in=openStream(o);
@@ -83,89 +228,11 @@ public Object getJSon(final Object o) throws Exception
 	return n;
 	}
 
-public String escapeTex(final Object o)
-	{
-	return escapeLaTex(o);
-	}
-
-public String escapeLaTex(final Object o)
-	{
-	if(o==null) return "";
-	String s=String.valueOf(o);
-	StringBuilder b=new StringBuilder(s.length());
-			
-	for(int i=0;i< s.length();++i)
+	
+	
+	@Override
+	public String toString()
 		{
-		char c=s.charAt(i);
-		switch(c)
-			{
-			case '&': case '%' :
-			case '$': case '#':
-			case '_': case '{':
-			case '}':
-				b.append("\\"+c);break;
-			case '~': b.append("$\textasciitilde$");
-			case '^': b.append("$\textasciicircum$");
-			case '\\': b.append("$\textbackslash$");
-			
-			default: b.append(c);break;
-			}
+		return "jsvelocity.tool";
 		}
-	return b.toString();
-	}
-
-public String escapeC(final Object o)
-	{
-	if(o==null) return "";
-	final String s=String.valueOf(o);
-	final StringBuilder b=new StringBuilder(s.length());
-	for(int i=0;i< s.length();++i)
-		{
-		char c=s.charAt(i);
-		switch(c)
-			{
-			case '\n': b.append("\\n");break;
-			case '\r': b.append("\\r");break;
-			case '\t': b.append("\\t");break;
-			case '\\': b.append("\\\\");break;
-			case '\'': b.append("\\\'");break;
-			case '\"': b.append("\\\"");break;
-			default: b.append(c);break;
-			}
-		}
-	return b.toString();
-	}
-
-public String escapeXml(final Object o)
-	{
-	if(o==null) return "";
-	final String s=String.valueOf(o);
-	final StringBuilder b=new StringBuilder(s.length());
-	for(int i=0;i< s.length();++i)
-		{
-		char c=s.charAt(i);
-		switch(c)
-			{
-			case '<': b.append("&lt;");break;
-			case '>': b.append("&gt;");break;
-			case '&': b.append("&amp;");break;
-			case '\'': b.append("&apos;");break;
-			case '\"': b.append("&quot;");break;
-			default: b.append(c);break;
-			}
-		}
-	return b.toString();
-	}
-
-public String escapeHttp(final Object o) throws Exception
-	{
-	if(o==null) return "";
-	return java.net.URLEncoder.encode(o.toString(),"UTF-8");
-	}
-
-@Override
-public String toString()
-	{
-	return "jsvelocity.tool";
-	}
 }

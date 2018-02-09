@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/testng/testng/6.11/testng-6.11.jar"/>
 	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/yaml/snakeyaml/1.19/snakeyaml-1.19.jar"/>
 	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar"/>
+	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
