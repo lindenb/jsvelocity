@@ -25,6 +25,7 @@ SOFTWARE.
 package com.github.lindenb.jsvelocity;
 
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -81,9 +82,15 @@ public class DivertDirective extends Directive {
         	 	{
         		if(filename==null || filename.trim().isEmpty())
 	              	{
-	              	throw new ParseErrorException("filename empty or mising");
+	              	throw new ParseErrorException("filename empty or mising in "+getName());
 	              	}
-    	    	final FileOutputStream fos = new FileOutputStream(filename,append);
+        		final File outputFile = new File(filename);
+        		if(outputFile.getParentFile()!=null)
+        			{
+        			outputFile.getParentFile().mkdirs();
+        			}
+        		LOG.info("diverting to "+outputFile);
+    	    	final FileOutputStream fos = new FileOutputStream(outputFile,append);
     	    	final PrintWriter pw = new PrintWriter(fos);
     	    	child.render(ctx, pw);
     	    	pw.flush();

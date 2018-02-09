@@ -24,9 +24,11 @@ SOFTWARE.
 */
 package com.github.lindenb.jsvelocity;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
@@ -36,9 +38,11 @@ import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -138,6 +142,8 @@ public class JSVelocity
 	private List<String> inputJsonFiles= new ArrayList<>();
 	@Parameter(names= {"-y","--yaml"},arity=2,description = "Add this YAML-File into the context..")
 	private List<String> inputYamlFiles= new ArrayList<>();
+	@Parameter(names= {"-p","--property","--properties"},arity=2,description = "Add this Java property file into the context..")
+	private List<String> inputPropertyFiles= new ArrayList<>();
 	@Parameter(names= {"-gson","--gson"},description = "Do not convert json object to java. Keep the com.google.gson.* objects")
 	private boolean keep_gson = false;
 	@Parameter(names= {"-tsv","--tsv"},arity=2,description = "Read tab delimited table in file.")
@@ -294,6 +300,33 @@ public class JSVelocity
 				return null;
 				}
 			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+		
+		this.mapKeyValues(this.inputPropertyFiles,propFileName->{
+			try
+				{
+				final InputStream inf = new FileInputStream(propFileName);
+				final Properties prop = new Properties();
+				prop.load(inf);
+				inf.close();
+				final MapWithParent p=new MapWithParent(null);
+				for(final Enumeration<Object> iter=prop.keys();iter.hasMoreElements();)
+					{
+					final String key = iter.nextElement().toString();
+					p.put(key, prop.getProperty(key, ""));
+					}
+				return p;
+				}
+			catch(final Exception err)
+				{
+				LOG.error("Cannot load property file "+propFileName);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+		
+		
+		
+		
 		
 		this.mapKeyValues(this.inputStrings,value->value).
 			forEach(KV->put(KV.getKey(),KV.getValue()));

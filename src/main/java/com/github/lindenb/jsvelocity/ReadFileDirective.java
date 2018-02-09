@@ -25,18 +25,22 @@ SOFTWARE.
 package com.github.lindenb.jsvelocity;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -53,6 +57,7 @@ import org.apache.velocity.runtime.parser.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.lindenb.jsvelocity.JSVelocity.MapWithParent;
 import com.google.gson.JsonParser;
 
 
@@ -174,16 +179,19 @@ public class ReadFileDirective extends Directive {
     	}
     
     if(method.isEmpty()) {
-    if(filename.endsWith(".json") || filename.endsWith(".json.gz")) {
-    	method = "json";
-    	}
-    else if(filename.endsWith(".yaml") || filename.endsWith(".yaml.gz")) {
-    	method = "yaml";
-    	}
-    else
-    	{
-    	method = "list";
-    	}
+	    if(filename.endsWith(".json") || filename.endsWith(".json.gz")) {
+	    	method = "json";
+	    	}
+	    else if(filename.endsWith(".yaml") || filename.endsWith(".yaml.gz")) {
+	    	method = "yaml";
+	    	}
+	    else if(filename.endsWith(".properties") || filename.endsWith(".properties.gz")) {
+	    	method = "properties";
+	    	}
+	    else
+	    	{
+	    	method = "list";
+	    	}
     }
     
     final File file = new File(filename);
@@ -295,6 +303,23 @@ public class ReadFileDirective extends Directive {
 			}
 	
 		v = instance.parseYaml(br);
+		}
+    else if(method.equalsIgnoreCase("properties"))
+		{
+    	final StringWriter sw=new StringWriter();
+    	int c;
+    	while((c=br.read())!=-1) sw.write(c);
+    	sw.close();
+    	
+    	final Properties prop=new Properties();
+    	prop.load(new ByteArrayInputStream(sw.toString().getBytes()));
+    	final Map<String,String> p = new LinkedHashMap<>();
+		for(final Enumeration<Object> iter=prop.keys();iter.hasMoreElements();)
+			{
+			final String key = iter.nextElement().toString();
+			p.put(key, prop.getProperty(key, ""));
+			}
+		v= p;
 		}
     else
     	{
