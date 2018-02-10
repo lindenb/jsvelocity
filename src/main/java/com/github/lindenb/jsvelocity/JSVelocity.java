@@ -38,7 +38,6 @@ import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -308,13 +307,7 @@ public class JSVelocity
 				final Properties prop = new Properties();
 				prop.load(inf);
 				inf.close();
-				final MapWithParent p=new MapWithParent(null);
-				for(final Enumeration<Object> iter=prop.keys();iter.hasMoreElements();)
-					{
-					final String key = iter.nextElement().toString();
-					p.put(key, prop.getProperty(key, ""));
-					}
-				return p;
+				return prop;
 				}
 			catch(final Exception err)
 				{

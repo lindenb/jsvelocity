@@ -324,7 +324,9 @@ public class JSVelocityTest {
 		   {"${tool.parseDouble($J)}","-s","12345.123","12345.123"},
 		   {"#foreach($i in ${tool.range($J)})$i#end","-s","4","0123"},
 		   {"#foreach($i in ${tool.range(1,$J)})$i#end","-s","4","123"},
-		   {"#foreach($i in ${tool.range(1,$J,2)})$i#end","-s","4","13"}
+		   {"#foreach($i in ${tool.range(1,$J,2)})$i#end","-s","4","13"},
+		   {"#if(${tool.nextId} > 0)YES#end","-s","","YES"}
+
 	 };
 	}
 	

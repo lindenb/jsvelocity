@@ -54,6 +54,7 @@ import com.google.gson.JsonParser;
 
 public class Tools
 	{
+	private static int ID_GENERATOR = 0;
 	private static final Logger LOG=LoggerFactory.getLogger(Tools.class);
 
 	private static class IntIterable
@@ -338,7 +339,14 @@ public Object getJSon(final Object o) throws Exception
 	return n;
 	}
 
+
+	public synchronized int getLastId() {
+		return Tools.ID_GENERATOR;
+	}
 	
+	public synchronized int getNextId() {
+		return ++Tools.ID_GENERATOR;
+	}
 	
 	@Override
 	public String toString()

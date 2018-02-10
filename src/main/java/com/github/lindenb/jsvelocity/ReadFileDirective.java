@@ -36,7 +36,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,6 @@ import org.apache.velocity.runtime.parser.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.lindenb.jsvelocity.JSVelocity.MapWithParent;
 import com.google.gson.JsonParser;
 
 
@@ -313,13 +311,7 @@ public class ReadFileDirective extends Directive {
     	
     	final Properties prop=new Properties();
     	prop.load(new ByteArrayInputStream(sw.toString().getBytes()));
-    	final Map<String,String> p = new LinkedHashMap<>();
-		for(final Enumeration<Object> iter=prop.keys();iter.hasMoreElements();)
-			{
-			final String key = iter.nextElement().toString();
-			p.put(key, prop.getProperty(key, ""));
-			}
-		v= p;
+		v= prop;
 		}
     else
     	{
