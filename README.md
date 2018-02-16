@@ -48,6 +48,10 @@ Options
     -gson, --gson
       Do not convert json object to java. Keep the com.google.gson.* objects
       Default: false
+    -hashtable, --hashtable
+      Read the tab delimited file as `List<Map<String,String>>`. First line is 
+      header 
+      Default: []
     -h, --help
       Show Help
     -c, --instance
@@ -143,6 +147,22 @@ java -jar dist/jsvelocity.jar -tsv c tmp.tsv -T 'matrix[0][1]= ${c[0][1]}'
 ```
 
 >`matrix[0][1]= 2`
+
+### Example
+
+```
+$ cat test.tsv
+
+A       B
+12      23
+x       y
+
+$ java -jar dist/jsvelocity.jar --hashtable T jeter.tsv -T '${T[0]["A"]}/${T[1]["B"]}'
+```
+
+>12/y
+
+
 
 
 ### Example

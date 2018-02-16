@@ -5,12 +5,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec/commons-codec/1.10/commons-codec-1.10.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/com/beust/jcommander/1.64/jcommander-1.64.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/apache/velocity/velocity-engine-core/2.0/velocity-engine-core-2.0.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/testng/testng/6.11/testng-6.11.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/yaml/snakeyaml/1.19/snakeyaml-1.19.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/apache/velocity/velocity-tools/2.0/velocity-tools-2.0.jar"/>
-	<classpathentry kind="lib" path="/home/lindenb/src/jsvelocity/lib/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar"/>
+	<classpathentry kind="lib" path="/commun/data/users/lindenb/src/jsvelocity/lib/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar"/>
+	<classpathentry kind="lib" path="/commun/data/users/lindenb/src/jsvelocity/lib/com/beust/jcommander/1.64/jcommander-1.64.jar"/>
+	<classpathentry kind="lib" path="/commun/data/users/lindenb/src/jsvelocity/lib/org/apache/velocity/velocity-engine-core/2.0/velocity-engine-core-2.0.jar"/>
+	<classpathentry kind="lib" path="/commun/data/users/lindenb/src/jsvelocity/lib/org/testng/testng/6.11/testng-6.11.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

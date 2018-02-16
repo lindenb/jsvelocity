@@ -74,7 +74,20 @@ public class JSVelocityTest {
 		Assert.assertEquals(readFile(out),"B12");
 		Assert.assertTrue(out.delete());
 	}
-
+	
+	@Test
+	public void testHashTable() throws IOException {
+		final File out = createTmpFile(".txt","A\tB\n12\t23\nx\ty");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"--hashtable","T",out.getPath(),
+				"-o",out.getPath(),
+				"-T","${T[0][\"A\"]}/${T[1][\"B\"]}"
+				}));
+		Assert.assertEquals(readFile(out),"12/y");
+		Assert.assertTrue(out.delete());
+	}
 	
 	
 	@DataProvider(name = "json1")

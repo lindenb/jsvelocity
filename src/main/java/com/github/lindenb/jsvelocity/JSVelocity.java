@@ -149,6 +149,8 @@ public class JSVelocity
 	private boolean keep_gson = false;
 	@Parameter(names= {"-tsv","--tsv"},arity=2,description = "Read tab delimited table in file.")
 	private List<String> inputTsvFiles= new ArrayList<>();
+	@Parameter(names= {"-hashtable","--hashtable"},arity=2,description = "Read the tab delimited file as `List<Map<String,String>>`. First line is header")
+	private List<String> hashTableFiles= new ArrayList<>();
 	@Parameter(names= {"-lenient","--lenient"},description = "Use a lenient json parser")
 	private boolean lenient_json_parser = false;
 	@Parameter(names= {"-T","--template"},description = "inline Velocity Template expression")
@@ -389,6 +391,48 @@ public class JSVelocity
 				return null;
 				}
 			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+		
+		
+		this.mapKeyValues(this.hashTableFiles,value->{
+			try
+			{
+			final Pattern tab=Pattern.compile("[\t]");
+			final BufferedReader r=new BufferedReader(new FileReader(value));
+			String line = r.readLine();
+			if(line==null ) {
+				LOG.error("Cannot find first line of "+value);
+				System.exit(-1);
+				return null;
+				}
+			final String header[]=tab.split(line);
+			
+			Object o = r.lines().
+				map(L->{
+					final Map<String,String> row = new LinkedHashMap<>(header.length);
+					final String tokens[]=tab.split(L);
+					for(int x=0;x<header.length && x< tokens.length;++x)
+						{
+						row.put(header[x],tokens[x]);
+						}
+					for(int x=tokens.length;x<header.length;++x)
+						{
+						row.put(header[x],"");
+						}
+					return row;
+					}).
+				collect(Collectors.toCollection(ArrayList::new));
+			r.close();
+			return o;
+			} catch(final IOException err)
+				{
+				LOG.error("Cannot read file "+value);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+
+		
+		
 		
 		final Writer out;
 		if(this.outputFile==null)
