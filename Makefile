@@ -95,6 +95,6 @@ jsvelocity: ${all_maven_jars}
 	rm -rf ${tmp.dir}
 
 
-${all_maven_jars} ${testng.jars}  : 
+$(sort ${all_maven_jars} ${testng.jars} ) : 
 	mkdir -p $(dir $@) && wget -O "$@" "http://central.maven.org/maven2/$(patsubst ${lib.dir}/%,%,$@)"
 
