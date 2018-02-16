@@ -214,20 +214,20 @@ public Double parseDouble(final Object o) ;
 Custom Velocity Directives
 --------------------------
 
-###Divert Directive
+### Divert Directive
 
 ```
 "#divert("newfile.txt",false)Hello World#{end}
 ```
 
-###Javascript Directive
+### Javascript Directive
 
 ```
 #javascript(1,"A") print(args[1]); for(var i=8;i<11;i++) print(""+i);print(J);#{end}
 ```
 
  
-###ReadFile Directive
+### ReadFile Directive
 
 - method 'table' :  read file as `List<List<String>>`
 - method 'hashtable': first line is header. read the file as `List<Map<String,String>>` 
@@ -245,7 +245,7 @@ Custom Velocity Directives
 #readfile("T","input.data","method:hashtable;delim:comma;")
 ```
 
-###Json Directive
+### Json Directive
 
 ```
 #json("variableName")[1,2,3,4,{}]#{end}
@@ -260,9 +260,4 @@ Pierre Lindenbaum PhD @yokofakun
 History:
 --------
 
-* 2018-02-16 : moved to all new version 3
-* 2014-07 Removed WebJSvelocity
-* 2014-07  changed some signatures:
-  * getPath/getNodePath
-  * getValue/getNodeValue
-  * getParent/getParentNode
+* 2018-02-16 : refectored everything. New version 3
