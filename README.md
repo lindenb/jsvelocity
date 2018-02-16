@@ -1,6 +1,12 @@
 jsvelocity
 ==========
 
+
+[![Build Status](https://travis-ci.org/lindenb/jsvelocity.svg)](https://travis-ci.org/lindenb/jsvelocity)
+
+![Last commit](https://img.shields.io/github/last-commit/lindenb/jsvelocity.png)
+
+
 A Macro Processor.
 
 Process structured data (json, yaml, tables, csv...) with Apache Velocity  ( [http://velocity.apache.org/](http://velocity.apache.org/) ).
