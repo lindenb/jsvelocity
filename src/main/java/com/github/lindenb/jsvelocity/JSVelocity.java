@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 package com.github.lindenb.jsvelocity;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.velocity.Template;
@@ -369,6 +371,24 @@ public class JSVelocity
 				}
 			}).forEach(KV->put(KV.getKey(),KV.getValue()));
 
+		
+		this.mapKeyValues(this.inputTsvFiles,value->{
+			try
+			{
+			final Pattern tab=Pattern.compile("[\t]");
+			final BufferedReader r=new BufferedReader(new FileReader(value));
+			Object o = r.lines().
+					map(L->new ArrayList<String>(Arrays.asList(tab.split(L)))).
+					collect(Collectors.toCollection(ArrayList::new));
+			r.close();
+			return o;
+			} catch(final IOException err)
+				{
+				LOG.error("Cannot read file "+value);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
 		
 		final Writer out;
 		if(this.outputFile==null)

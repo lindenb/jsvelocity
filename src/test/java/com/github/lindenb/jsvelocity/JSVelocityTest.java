@@ -1,12 +1,9 @@
 package com.github.lindenb.jsvelocity;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -14,10 +11,6 @@ import org.testng.annotations.Test;
 
 public class JSVelocityTest {
 	
-	private String concat(final Object...o)
-		{
-		return Arrays.stream(o).map(O->O.toString()).collect(Collectors.joining("\n"));
-		}
 	
 	private File createTmpFile(final String suffix,final String content) throws IOException {
 		final File f = File.createTempFile("test", suffix);
@@ -68,7 +61,20 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());
 	}
 	
-	
+	@Test
+	public void testTsv() throws IOException {
+		final File out = createTmpFile(".txt","A\tB\n12\t23");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"--tsv","T",out.getPath(),
+				"-o",out.getPath(),
+				"-T","${T[0][1]}${T[1][0]}"
+				}));
+		Assert.assertEquals(readFile(out),"B12");
+		Assert.assertTrue(out.delete());
+	}
+
 	
 	
 	@DataProvider(name = "json1")
@@ -325,7 +331,8 @@ public class JSVelocityTest {
 		   {"#foreach($i in ${tool.range($J)})$i#end","-s","4","0123"},
 		   {"#foreach($i in ${tool.range(1,$J)})$i#end","-s","4","123"},
 		   {"#foreach($i in ${tool.range(1,$J,2)})$i#end","-s","4","13"},
-		   {"#if(${tool.nextId} > 0)YES#end","-s","","YES"}
+		   {"#if(${tool.nextId} > 0)YES#end","-s","","YES"},
+		   {"#if(${tool.split($J,2).size()} > 0 )YES#end","-e","[1,2,4,5,10,11]","YES"}
 
 	 };
 	}

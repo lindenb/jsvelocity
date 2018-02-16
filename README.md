@@ -1,24 +1,20 @@
 jsvelocity
 ==========
 
-Processing json data with apache velocity  ( http://velocity.apache.org/ ).
+A Macro Processor.
+
+Process structured data (json, yaml, tables, csv...) with Apache Velocity  ( [http://velocity.apache.org/](http://velocity.apache.org/) ).
 
 Original post was http://plindenbaum.blogspot.fr/2011/11/processing-json-data-with-apache.html
 
 
 Compile
 -------
-Edit or create a file 'build.properties' in the base directory and set the properties for ivy.
-It could be:
-```
-ivy.jar.dir=${user.home}/.ivy
-ivy.install.version=2.3.0
-```
 
-The compile process requires the javaCC code compiler.
+The compile process requires GNU make, java oracle JDK 8.* , wget and an internet connection.
 
 ```bash
-ant jsvelocity
+make
 ```
 
 Usage
@@ -28,180 +24,237 @@ Usage
 java -jar jsvelocity.jar (options) template.vm
 ```
 
+
+
 Options
 -------
-* -s (key) (string) add this string into the context.
-* -e (key) (json-expr) add this json into the context.
-* -f (key) (json-file) add this json into the context.
-* -i (key) and read stdin-json to the context.
-* -C (key) (class.qualified.Name) add this Class into the context.
-* -c (key) (class.qualified.Name) add an instance of Class into the context.
-* -o (base directory) output base directory (default: current directory)
+
+```
+    -C, --class
+      Add this java Class into the context. class is wrapped into a 
+      org.apache.velocity.tools.generic.ClassTool 
+      Default: []
+    -D, --dir, --directory
+      Output directory
+    -e, --expr
+      Add this JSON-Expression into the context..
+      Default: []
+    -gson, --gson
+      Do not convert json object to java. Keep the com.google.gson.* objects
+      Default: false
+    -h, --help
+      Show Help
+    -c, --instance
+      Add this java instance into the context..
+      Default: []
+    -f, --json
+      Add this JSON-File into the context..
+      Default: []
+    -lenient, --lenient
+      Use a lenient json parser
+      Default: false
+    -o, --output
+      Output File. Default: standout
+    -p, --property, --properties
+      Add this Java property file into the context..
+      Default: []
+    -s, --string
+      Add this String into the context..
+      Default: []
+    -T, --template
+      inline Velocity Template expression
+    -tsv, --tsv
+      Read tab delimited table in file.
+      Default: []
+    -y, --yaml
+      Add this YAML-File into the context..
+      Default: []
+
+```
+
+Examples
+--------
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -T 'Hello'
+```
+
+>Hello
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -s c World -T 'Hello $c !'
+```
+
+>Hello World !
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -s c World -T 'Hello ${tool.before($c,"l")} !'
+```
+
+>Hello Wor !
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -s c World -T 'Hello ${tool.after($c,"l")} !'
+```
+
+>Hello d !
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -s c World -T 'Hello ${tool.md5($c)} !'
+```
+
+>Hello f5a7924e621e84c9280a9a27e1bcb7f6 !
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -s c World -T 'Hello ${tool.sha1($c)} !'
+```
+
+>Hello 70c07ec18ef89c5309bbb0937f3a6342411e1fdd !
+
+
+### Example
+
+```
+$ seq 1 10 |paste - - > tmp.tsv
+java -jar dist/jsvelocity.jar -tsv c tmp.tsv -T 'matrix[0][1]= ${c[0][1]}'
+```
+
+>`matrix[0][1]= 2`
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -C c java.lang.String -T '${c.getPackage().getName()}'
+```
+
+> java.lang
+
+
+### Example
+
+```
+$ java -jar dist/jsvelocity.jar -e c '[1,2,3]' -T '${c.size()} c[0]=${c[0]}'
+```
+
+>3 c[0]=1
+
+
+### Example
+
+```
+$ cat t.yaml 
+```
+
+```yaml
+mylist:
+- 'item 1'
+- 'item 2'
+```
+
+```
+$ java -jar dist/jsvelocity.jar -y c t.yaml -T '${c.mylist[1]}'
+```
+
+>item 2
+
 
 Default objects
 ---------------
-* out : the writer (default is stdout). This object contains the following methods. close(), flush(), open(String), openIfMissing(String), getFile()
-* tool : utility containing the following method: escapeC(String), escapeXml(String), escapeHttp(String)
-* now: java.sql.Timestamp at startup
+* `out` : the writer (default is stdout). An instance of java.io.Writer
+* `tool` : instance of utilities. see the code [./src/main/java/com/github/lindenb/jsvelocity/Tools.java](./src/main/java/com/github/lindenb/jsvelocity/Tools.java)
+* `now`: java.sql.Timestamp at startup
 
-JSON
----------------
-Nodes implement the following interfaces:
+Tools
+-----
+
+Tools ( ./src/main/java/com/github/lindenb/jsvelocity/Tools.java ) implement the following methods (non exhaustive... ):
 
 ```java
-package com.github.lindenb.jsvelocity.json;
-
-import java.util.List;
-
-public interface JSNode
-	{
-	public boolean isArray();
-	public boolean isObject();
-	public boolean isNumber();
-	public boolean isString();
-	public boolean isBoolean();
-	public boolean isNull();
-	public boolean isTrue();
-	public boolean isFalse();
-	public boolean isDecimal();
-	public boolean isInteger();
-	public boolean isComplex();
-	public boolean isBigDecimal();
-	public boolean isBigInteger();
-	public abstract Object getNodeValue();
-	public String getNodeId();
-	public JSNode findById(String s);
-	public JSNode getParentNode();
-	public String getNodePath();
-	public JSNode getNodeRoot();
-	}
-
-public interface JSArray
-	extends JSNode,List<JSNode>
-	{
-
-	}
-
-
-public interface JSNull
-	extends JSNode
-	{
-
-	}
-
-public interface JSObject
-	extends JSNode,Map<String, JSNode>
-	{
-
-	}
-
-public interface JSPrimitive
-	extends JSNode
-	{
-	}
-
-```
-numbers are stored using `java.math.BigInteger` or `java.math.BigDecimal`
-
-
-
-Example:
---------
-A JSON file 'test.json'
-```json
-{
-individuals:[
-	{
-	name: "Riri",
-	age: 8,
-	duck: true
-	},
-	{
-	name: "Fifi",
-	age: 9,
-	duck: true
-	},
-	{
-	name: "Loulou",
-	age: 10,
-	duck: true
-	}
-
-	]
-
-}
-
-```
-A Velocity template file:
-```html
-<html>
-<body>
-#foreach($indi in ${all.individuals})
-<h1>${indi['name']}</h1>
-Age:${indi.age}<br/>${indi.duck}
-#end
-<h3>String Constructors</h3>
-<ul>
-#foreach($S in ${STRING.constructors})
-<li>${S}</li>
-#end
-</ul>
-<p>${tool.escapeXml("<>&")}</p>
-${out.open("/tmp/file.txt")}
-Hello
-${out.close()}
-</body>
-</html>
+public String capitalize(final Object o) ;
+public boolean isBlank(final Object o) ;
+public String escapeCsv(final Object o) ;
+public String escapeHtml(final Object o);
+public String escapeJava(final Object o) ;
+public String escapeJson(final Object o) ;
+public String escapeXml(final Object o) ;
+public String md5(final Object o) ;
+public String sha1(final Object o) ;
+public String left(final Object o,int l);
+public String right(final Object o,int l) ;
+public String before(final Object o,Object subo) ;
+public String after(final Object o,Object subo) ;
+public Integer parseInt(final Object o);
+public Double parseDouble(final Object o) ;
 ```
 
-apply the template:
-```bash
-$ java -jar dist/jsvelocity.jar \
-	-f all test.json \
-	-C STRING java.lang.String \
-	test.vm
+Custom Velocity Directives
+--------------------------
 
-<html>
-<body>
-<h1>Riri</h1>
-Age:8<br/>true
-<h1>Fifi</h1>
-Age:9<br/>true
-<h1>Loulou</h1>
-Age:10<br/>true
-<h3>String Constructors</h3>
-<ul>
-<li>public java.lang.String(byte[])</li>
-<li>public java.lang.String(byte[],int,int)</li>
-<li>public java.lang.String(byte[],java.nio.charset.Charset)</li>
-<li>public java.lang.String(byte[],java.lang.String) throws java.io.UnsupportedEncodingException</li>
-<li>public java.lang.String(byte[],int,int,java.nio.charset.Charset)</li>
-<li>public java.lang.String(java.lang.StringBuilder)</li>
-<li>public java.lang.String(java.lang.StringBuffer)</li>
-<li>public java.lang.String(int[],int,int)</li>
-<li>public java.lang.String(char[],int,int)</li>
-<li>public java.lang.String(char[])</li>
-<li>public java.lang.String(java.lang.String)</li>
-<li>public java.lang.String()</li>
-<li>public java.lang.String(byte[],int,int,java.lang.String) throws java.io.UnsupportedEncodingException</li>
-<li>public java.lang.String(byte[],int)</li>
-<li>public java.lang.String(byte[],int,int,int)</li>
-</ul>
-<p>&lt;&gt;&amp;</p>
-</body>
-</html>
+###Divert Directive
 
+```
+"#divert("newfile.txt",false)Hello World#{end}
+```
 
-$ more /tmp/file.txt 
-Hello
+###Javascript Directive
+
+```
+#javascript(1,"A") print(args[1]); for(var i=8;i<11;i++) print(""+i);print(J);#{end}
+```
+
+ 
+###ReadFile Directive
+
+- method 'table' :  read file as `List<List<String>>`
+- method 'hashtable': first line is header. read the file as `List<Map<String,String>>` 
+- method 'hash' : first line is header, primary key 'pkey' must be provided . read the file as `Map<String,<Map<String,String>>`
+-  method 'list' :  read file as `<List<String>>` 
+- method 'json' :  read file as JSON
+- method 'yaml' :  read file as YAML
+- method 'properties' :  read file as `java.util.Properties` files
 
 
 ```
+#readfile("T","input.data")
+#readfile("T","input.data","method:table;delim:comma;")
+#readfile("T","input.data","method:hash;pkey:y;delim:comma;")
+#readfile("T","input.data","method:hashtable;delim:comma;")
+```
+
+###Json Directive
+
+```
+#json("variableName")[1,2,3,4,{}]#{end}
+```
+
+Author
+------
+
+Pierre Lindenbaum PhD @yokofakun
 
 
 History:
 --------
 
+* 2018-02-16 : moved to all new version 3
 * 2014-07 Removed WebJSvelocity
 * 2014-07  changed some signatures:
   * getPath/getNodePath

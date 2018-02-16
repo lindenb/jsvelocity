@@ -31,11 +31,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +58,9 @@ public class Tools
 	{
 	private static int ID_GENERATOR = 0;
 	private static final Logger LOG=LoggerFactory.getLogger(Tools.class);
-
+	
+	
+	
 	private static class IntIterable
 		implements Iterable<Integer>
 		{
@@ -347,6 +351,48 @@ public Object getJSon(final Object o) throws Exception
 	public synchronized int getNextId() {
 		return ++Tools.ID_GENERATOR;
 	}
+	
+	
+	
+	@SuppressWarnings("unchecked")
+	public List<List<Object>> split(final Object o,int size)
+		{
+		final List<Object> L;
+		if(o==null)
+			{
+			L= Collections.emptyList();
+			}
+		else if(o.getClass().isArray())
+			{
+			L=Arrays.asList((Object[])o);
+			}
+		else if( o instanceof Collection)
+			{
+			L = new ArrayList<>(Collection.class.cast(o));
+			}
+		else
+			{
+			throw new IllegalArgumentException("not an array or collection");
+			}
+		if(size<=0) throw new IllegalArgumentException("bad size:"+size);
+		
+		final List<List<Object>> array=new ArrayList<>();
+		int i=0;
+		while(i< L.size())
+			{
+			final List<Object> sublist=new ArrayList<>(size);
+			for(int x=0;x<size && i+x < L.size();++x)
+				{
+				sublist.add(L.get(i+x));
+				}
+			array.add(sublist);
+			i+=sublist.size();
+			}
+		return array;
+		}
+	
+	
+	
 	
 	@Override
 	public String toString()
