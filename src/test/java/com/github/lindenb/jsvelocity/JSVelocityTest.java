@@ -319,6 +319,20 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());		
 		}
 	
+	@Test
+	public void testClassInstanceStr() throws IOException {
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				"-cstr","S","java.io.File",System.getProperty("java.io.tmpdir",""),
+				"-T","${S.exists()} ${S.isDirectory()}"
+				}));
+		Assert.assertEquals(readFile(out),"true true");
+		Assert.assertTrue(out.delete());		
+		}
+
 	
 	@DataProvider(name = "tooldata1")
 	public Object[][] createData1Example() {

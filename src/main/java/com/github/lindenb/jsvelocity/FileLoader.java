@@ -2,7 +2,6 @@ package com.github.lindenb.jsvelocity;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,17 +14,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class FileLoader
 	{
 	private static final Logger LOG=LoggerFactory.getLogger(FileLoader.class);
-	
+	private boolean lenient_json_parser = false;
 	
 	
 	private boolean isURL(final String uri) {
@@ -38,9 +41,17 @@ public class FileLoader
 	public InputStream openInputStream(final String uri) throws IOException{
 		if(uri==null) throw new NullPointerException("uri is null");
 		if(StringUtils.isBlank(uri)) throw new IllegalArgumentException("openInputStream uri is empty");
+		
 		if(isURL(uri)) {
 			final URL url = new URL(uri);
-			return url.openStream();
+			InputStream in = url.openStream();
+			int q= uri.indexOf('?');
+			if(q==-1) q=uri.length();
+			if(uri.substring(0, q).endsWith(".gz"))
+				{
+				in = new GZIPInputStream(in);
+				}
+			return in;
 			}
 		else
 			{
@@ -130,6 +141,27 @@ public class FileLoader
 		close(in);
 		}
 	}
+	
+	public JsonElement parseJson(final Reader r) {
+		final JsonParser parser= new JsonParser();
+		JsonReader jr = new JsonReader(r);
+		if(this.lenient_json_parser) jr.setLenient(true);
+		final JsonElement E= parser.parse(jr);
+		return E;
+		}
+	
+	public Object readJSon(final String uri) throws IOException{
+		Reader r=null;
+		try {
+			r = openReader(uri);
+			return parseJson(r);
+			}
+		finally
+			{
+			close(r);
+			}
+		}
+
 
 	private void close(final Closeable c)
 		{

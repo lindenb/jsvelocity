@@ -34,6 +34,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.AbstractMap;
@@ -81,6 +82,16 @@ public class JSVelocity
 	private static final Logger LOG=LoggerFactory.getLogger(JSVelocity.class);
 	private VelocityContext context=new VelocityContext();
 	static final String PARAM_JSVELOCITY_INSTANCE="\0"+JSVelocity.class.getName()+".instance";
+	
+	public static class Now
+		{
+		public java.sql.Timestamp getTimestamp() {
+			return new java.sql.Timestamp(System.currentTimeMillis());
+			}
+		public String toString() {
+			return getTimestamp().toString();
+			}
+		}
 	
 	public static interface HierachicalContainer
 		{
@@ -135,6 +146,8 @@ public class JSVelocity
 	private List<String> inputJavaClasses = new ArrayList<>();
 	@Parameter(names= {"-c","--instance"},arity=2,description = "Add this java instance into the context..")
 	private List<String> inputJavaInstances = new ArrayList<>();
+	@Parameter(names= {"-cstr","--instance-strst"},arity=3,description = "Add this java instance into the context. Takes 3 parameters (key) (java.class with string constructor) (string-for-constructor) e.g: `mykey java.io.File /tmp`")
+	private List<String> inputJavaInstancesStr = new ArrayList<>();
 	@Parameter(names= {"-s","--string"},arity=2,description = "Add this String into the context..")
 	private List<String> inputStrings= new ArrayList<>();
 	@Parameter(names= {"-e","--expr"},arity=2,description = "Add this JSON-Expression into the context..",converter=StringConverter.class,listConverter=StringConverter.class)
@@ -298,11 +311,32 @@ public class JSVelocity
 				}
 			catch(final Exception err)
 				{
-				LOG.error("Cannot load new instance of class "+className);
+				LOG.error("Cannot load new instance of class "+className,err);
 				System.exit(-1);
 				return null;
 				}
 			}).forEach(KV->put(KV.getKey(),KV.getValue()));
+		
+		for(int i=0;i<this.inputJavaInstancesStr.size();i+=3)
+			{
+			final String key = this.inputJavaInstancesStr.get(i);
+			final String className = this.inputJavaInstancesStr.get(i+1);
+			final String ctorParam = this.inputJavaInstancesStr.get(i+2);
+			try
+				{
+				final Class<?> C= Class.forName(className);
+				final Constructor<?> ctor = C.getConstructor(String.class);
+				this.put(key, ctor.newInstance(ctorParam));
+				}
+			catch(final Exception err)
+				{
+				LOG.error("Cannot load new instance of class "+className,err);
+				System.exit(-1);
+				}
+			}
+		
+		
+		
 		
 		this.mapKeyValues(this.inputPropertyFiles,propFileName->{
 			try
@@ -447,7 +481,7 @@ public class JSVelocity
 			}
 		put("out",out);
 		put("tool",new Tools());
-		put("now",new java.sql.Timestamp(System.currentTimeMillis()));
+		put("now",new Now());
 		put(PARAM_JSVELOCITY_INSTANCE, this);
 		
 		final File templateFile ;

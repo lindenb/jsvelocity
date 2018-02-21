@@ -11,3 +11,4 @@ test-output
 .settings
 hs_err_pid*
 jeter*
+.classpath
