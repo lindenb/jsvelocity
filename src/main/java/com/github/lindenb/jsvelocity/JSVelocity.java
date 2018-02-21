@@ -48,6 +48,9 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -162,6 +165,9 @@ public class JSVelocity
 	private boolean keep_gson = false;
 	@Parameter(names= {"-tsv","--tsv"},arity=2,description = "Read tab delimited table in file.")
 	private List<String> inputTsvFiles= new ArrayList<>();
+	@Parameter(names= {"-x","--xml"},arity=2,description = "Read File as DOM document.")
+	private List<String> inputXmlFiles= new ArrayList<>();
+
 	@Parameter(names= {"-hashtable","--hashtable"},arity=2,description = "Read the tab delimited file as `List<Map<String,String>>`. First line is header")
 	private List<String> hashTableFiles= new ArrayList<>();
 	@Parameter(names= {"-lenient","--lenient"},description = "Use a lenient json parser")
@@ -355,6 +361,20 @@ public class JSVelocity
 				}
 			}).forEach(KV->put(KV.getKey(),KV.getValue()));
 		
+		this.mapKeyValues(this.inputXmlFiles,xmlFile->{
+			try
+				{
+				final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+				final DocumentBuilder db = dbf.newDocumentBuilder();
+				return db.parse(xmlFile);
+				}
+			catch(final Exception err)
+				{
+				LOG.error("Cannot load XML file "+xmlFile);
+				System.exit(-1);
+				return null;
+				}
+			}).forEach(KV->put(KV.getKey(),KV.getValue()));
 		
 		
 		

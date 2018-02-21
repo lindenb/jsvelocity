@@ -57,6 +57,11 @@ Options
     -c, --instance
       Add this java instance into the context..
       Default: []
+    -cstr, --instance-strst
+      Add this java instance into the context. Takes 3 parameters (key) 
+      (java.class with string constructor) (string-for-constructor) e.g: 
+      `mykey java.io.File /tmp`
+      Default: []
     -f, --json
       Add this JSON-File into the context..
       Default: []
@@ -78,6 +83,9 @@ Options
       Default: []
     -y, --yaml
       Add this YAML-File into the context..
+      Default: []
+    -x, xml
+      Read File as DOM document.
       Default: []
 
 ```

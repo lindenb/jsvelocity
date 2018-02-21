@@ -332,7 +332,25 @@ public class JSVelocityTest {
 		Assert.assertEquals(readFile(out),"true true");
 		Assert.assertTrue(out.delete());		
 		}
-
+	@Test
+	public void testXml() throws IOException {
+		final File xml = File.createTempFile("tmp", ".xml");
+		PrintWriter pw=new PrintWriter(xml);
+		pw.write("<a><b/></a>");
+		pw.flush();
+		pw.close();
+		final File out = File.createTempFile("test", ".out");
+		JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"-o",out.getPath(),
+				"--xml","X",xml.getPath(),
+				"-T","${X.documentElement.nodeName}"
+				}));
+		Assert.assertEquals(readFile(out),"a");
+		Assert.assertTrue(out.delete());		
+		Assert.assertTrue(xml.delete());		
+		}
 	
 	@DataProvider(name = "tooldata1")
 	public Object[][] createData1Example() {
