@@ -39,10 +39,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -391,9 +397,28 @@ public Object getJSon(final Object o) throws Exception
 		return array;
 		}
 	
+	private Object _xpath(final Object node,final String expr,final QName type) {
+		try {
+			return Objects.requireNonNull(Objects.requireNonNull(XPathFactory.newInstance(),"XpathFactory is null").newXPath(),"Cannot create XPath").evaluate(expr, node, type);
+		} catch(XPathExpressionException err)
+		{
+			LOG.error("cannot compile xpath "+expr,err);;
+			throw new RuntimeException(err);
+		}
+	}
 	
-	
-	
+	public Object xpath(final Object node,final String expr) {
+		final org.w3c.dom.NodeList l=(org.w3c.dom.NodeList)_xpath(node,expr,XPathConstants.NODESET);
+		final ArrayList<Object> L = new ArrayList<>(l.getLength());
+		for(int i=0;i<l.getLength();i++) L.add(l.item(i));
+		return L;
+		}
+	public Object xpathString(final Object node,final String expr) {
+		return _xpath(node,expr,XPathConstants.STRING);
+		}
+	public Object xpathNumber(final Object node,final String expr) {
+		return _xpath(node,expr,XPathConstants.NUMBER);
+		}
 	@Override
 	public String toString()
 		{

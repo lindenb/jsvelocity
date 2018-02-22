@@ -397,4 +397,36 @@ public class JSVelocityTest {
 		Assert.assertTrue(out.delete());
 	}
 
+	
+	@DataProvider(name = "tooldata2")
+	public Object[][] createData2Example() {
+		final String xmlstr1="<a><b><c>a</c><c>1234</c><c>false</c></b></a>";
+	 return new Object[][] {
+		   {"$tool.parseInt(${tool.xpathNumber($X,\"count(//c)\")})",xmlstr1,"3"},
+		   {"${tool.xpathString($X,\"/a/b/c[2]/text()\")}",xmlstr1,"1234"},
+		   {"${tool.xpath($X,\"//c\").size()}",xmlstr1,"3"}
+
+	 };
+	}
+	
+	@Test(dataProvider = "tooldata2")
+	public void testXpathTool(
+			final String templateStr,
+			final String xmlStr,
+			final String outputStr
+			) throws IOException {
+		final File out = File.createTempFile("test", ".out");
+		final File xmlFile=createTmpFile(".xml",xmlStr);
+		final JSVelocity instance = new JSVelocity();
+		Assert.assertEquals(0,instance.execute(
+			new String[] {
+				"--xml","X",xmlFile.getPath(),
+				"-o",out.getPath(),
+				"-T",templateStr
+				}));
+		Assert.assertEquals(readFile(out),outputStr);
+		Assert.assertTrue(out.delete());
+		Assert.assertTrue(xmlFile.delete());
+	}
+
 }
