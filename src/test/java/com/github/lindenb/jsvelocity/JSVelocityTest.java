@@ -167,8 +167,8 @@ public class JSVelocityTest {
 		divertFile.delete();
 		final File f=createTmpFile(".vm",
 			"HELLO"+
-			"#divert(\""+divertFile.getPath()+"\",false)"+templateStr+"#{end}" +
-			"#divert(\""+divertFile.getPath()+"\",true)"+templateStr+"#{end}"
+			"#divert(\""+divertFile.getPath()+"\",\"\")"+templateStr+"#{end}" +
+			"#divert(\""+divertFile.getPath()+"\",\"append:true;\")"+templateStr+"#{end}"
 			);
 		JSVelocity instance = new JSVelocity();
 		Assert.assertEquals(0,instance.execute(

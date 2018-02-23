@@ -60,7 +60,7 @@ public class DivertDirective extends Directive {
     	LOG.debug("render "+getName()+" directive");
     	
     	String filename=null;
-    	boolean append=false;
+    	String modifiers="";
     	
         //loop through all "params"
         for(int i=0; i<node.jjtGetNumChildren(); i++) {
@@ -70,7 +70,7 @@ public class DivertDirective extends Directive {
         		switch(i)
         			{
         			case 0: filename = String.valueOf(child.value(ctx)); break;
-        			case 1: append = (Boolean)child.value(ctx);break;
+        			case 1: modifiers = String.valueOf(child.value(ctx)); break;
         			default:
         				{
         				LOG.warn("Too many arguments for "+this.getName());
@@ -84,17 +84,45 @@ public class DivertDirective extends Directive {
 	              	{
 	              	throw new ParseErrorException("filename empty or mising in "+getName());
 	              	}
-        		final File outputFile = new File(filename);
-        		if(outputFile.getParentFile()!=null)
-        			{
-        			outputFile.getParentFile().mkdirs();
+        		
+        		boolean overwrite=true;
+        		boolean append=false;
+        		for(final String modifier: modifiers.split("[;]+")) {
+        			if(modifier.trim().isEmpty()) continue;
+        			final int colon = modifier.indexOf(':');
+        			final String key;
+        			final String value;
+        			if(colon!=-1) {
+        				key = modifier.substring(0, colon).trim().toLowerCase();
+        				value=  modifier.substring(colon+1).trim();
         			}
-        		LOG.info("diverting to "+outputFile);
-    	    	final FileOutputStream fos = new FileOutputStream(outputFile,append);
-    	    	final PrintWriter pw = new PrintWriter(fos);
-    	    	child.render(ctx, pw);
-    	    	pw.flush();
-    	    	pw.close();
+        			else
+        			{
+        				key= modifier;
+        				value= "";
+        			}
+        			if(key.equals("append")) {
+        				append = Boolean.valueOf(value);
+        			} else if(key.equals("overwrite")) {
+        				overwrite = Boolean.valueOf(value);
+        			} else
+        				{
+        				throw new ParseErrorException("undefined modifier "+key+" in "+modifiers);
+        				}
+        		}
+        		final File outputFile = new File(filename);
+	        	if(outputFile.exists() || overwrite) {
+	        		if(outputFile.getParentFile()!=null)
+	        			{
+	        			outputFile.getParentFile().mkdirs();
+	        			}
+	        		LOG.info("diverting to "+outputFile);
+	    	    	final FileOutputStream fos = new FileOutputStream(outputFile,append);
+	    	    	final PrintWriter pw = new PrintWriter(fos);
+	    	    	child.render(ctx, pw);
+	    	    	pw.flush();
+	    	    	pw.close();
+	        		}
     	    	break; 
         	 	}
         }
